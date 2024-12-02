@@ -1,0 +1,5 @@
+name: Ktulu
+author: Chanwook Lee
+main: com.chanwook.app.Ktulu
+version: 0.1.0
+description: Ktulu is a plugin for simple managing server with Web-based UI
