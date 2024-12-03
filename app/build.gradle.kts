@@ -6,6 +6,7 @@
 
 plugins {
     id("buildlogic.kotlin-application-conventions")
+    kotlin("plugin.serialization") version "1.8.22"
 }
 
 repositories {
@@ -18,6 +19,11 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT") // Paper API
+
+    implementation("io.ktor:ktor-server-core:2.3.2")
+    implementation("io.ktor:ktor-server-netty:2.3.2")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.2")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.2")
 }
 
 application {
