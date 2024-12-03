@@ -3,9 +3,11 @@
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
 
 <p>
-  Ktulu is a plugin that helps you manage your Minecraft server remotely with ease! (WIP)
+  Ktulu is a plugin that helps you manage your Minecraft server remotely with Web-Based UI
 </p>
 </div>
+
+# 🚧 WIP 🚧
 
 ## ✨ Features
 
