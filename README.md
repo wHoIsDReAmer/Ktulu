@@ -30,3 +30,22 @@
 
 ### ⚙️ System
 - Server backups
+- View CPU / Memory Resources
+
+## 🛹 Progress (TODO)
+- Plugin Management
+    - [ ] Remote download of Spigot and Paper plugins
+    - [ ] Enable/Disable plugins
+    - [ ] Upload and remove plugins
+- File Management
+    - [ ] Download server files
+    - [ ] Edit YML files
+- User Management
+    - [ ] View server user list
+    - [ ] Manage kicks and bans
+- Console
+    - [ ] Real-time server log monitoring
+    - [ ] Send console commands
+- System
+  - [ ] Server backups
+  - [x] View CPU / Memory Resources
