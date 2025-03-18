@@ -9,7 +9,6 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-
 private fun getSystemInfo(): SystemInfo {
     val osBean = ManagementFactory.getOperatingSystemMXBean() as com.sun.management.OperatingSystemMXBean
     val totalMemory = osBean.totalMemorySize / (1024 * 1024)

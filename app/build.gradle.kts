@@ -11,7 +11,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven("https://papermc.io/repo/repository/maven-public/") // Paper API
+    maven("https://repo.papermc.io/repository/maven-public/") // Paper API
 }
 
 dependencies {
