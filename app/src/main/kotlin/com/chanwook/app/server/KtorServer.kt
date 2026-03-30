@@ -13,23 +13,21 @@ class KtorServer {
     private var server: ApplicationEngine? = null
 
     fun startServer() {
-        if (server == null) {
-            server = embeddedServer(Netty, port = 8332) {
-                install(ContentNegotiation) {
-                    // TODO: prod 환경에서는 false
-                    json(Json { prettyPrint = true })
-                }
+        if (server != null) return
 
-                routing {
-                    systemRoutes()
-                }
-            }.apply { start(wait = false )}
-        }
+        server = embeddedServer(Netty, port = 8332) {
+            install(ContentNegotiation) {
+                json(Json { prettyPrint = true })
+            }
+
+            routing {
+                systemRoutes()
+            }
+        }.apply { start(wait = false) }
     }
 
     fun stopServer() {
-        if (server != null) {
-            server!!.stop(5000, 5000)
-        }
+        server?.stop(1000, 2000)
+        server = null
     }
 }
