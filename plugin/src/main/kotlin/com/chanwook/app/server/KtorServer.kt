@@ -1,6 +1,8 @@
 package com.chanwook.app.server
 
+import com.chanwook.app.server.plugin.pluginRoutes
 import com.chanwook.app.server.system.systemRoutes
+import com.chanwook.app.service.PluginService
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -9,7 +11,9 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
-class KtorServer {
+class KtorServer(
+    private val pluginService: PluginService
+) {
     private var server: ApplicationEngine? = null
 
     fun startServer() {
@@ -22,6 +26,7 @@ class KtorServer {
 
             routing {
                 systemRoutes()
+                pluginRoutes(pluginService)
             }
         }.apply { start(wait = false) }
     }

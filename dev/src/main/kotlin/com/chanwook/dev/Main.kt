@@ -6,7 +6,7 @@ import com.chanwook.app.server.KtorServer
 fun main() {
     Logger.init { println(it) }
 
-    val server = KtorServer()
+    val server = KtorServer(MockPluginService())
     Logger.info("개발 서버를 시작합니다. (http://localhost:8332)")
     server.startServer()
 

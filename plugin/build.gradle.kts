@@ -1,6 +1,7 @@
 plugins {
     id("buildlogic.kotlin-application-conventions")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.shadow)
 }
 
 repositories {
@@ -27,4 +28,15 @@ application {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    archiveBaseName.set("Ktulu")
+
+    dependencies {
+        exclude(dependency("io.papermc.paper:.*"))
+    }
+
+    mergeServiceFiles()
 }
