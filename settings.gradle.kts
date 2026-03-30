@@ -17,5 +17,6 @@ plugins {
 }
 
 rootProject.name = "Ktulu"
-include("app")
+include("plugin")
+include("dev")
 
