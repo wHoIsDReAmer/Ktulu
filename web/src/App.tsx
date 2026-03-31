@@ -4,6 +4,7 @@ import { ToastContainer } from "./components/Toast";
 import MainLayout from "./layouts/MainLayout";
 import { verifyApiKey } from "./lib/api";
 import { clearApiKey, getApiKey } from "./lib/auth";
+import { I18nProvider } from "./lib/i18n";
 import Login from "./pages/Login";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -35,7 +36,7 @@ export default function App() {
   });
 
   return (
-    <>
+    <I18nProvider>
       <Show when={!checking()}>
         <Show
           when={authed()}
@@ -52,6 +53,6 @@ export default function App() {
         </Show>
       </Show>
       <ToastContainer />
-    </>
+    </I18nProvider>
   );
 }

@@ -3,8 +3,10 @@ import { type Component, createSignal } from "solid-js";
 import { addToast } from "../components/Toast";
 import { verifyApiKey } from "../lib/api";
 import { setApiKey } from "../lib/auth";
+import { useI18n } from "../lib/i18n";
 
 const Login: Component<{ onLogin: () => void }> = (props) => {
+  const { t } = useI18n();
   const [key, setKey] = createSignal("");
   const [loading, setLoading] = createSignal(false);
 
@@ -18,13 +20,13 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
       const ok = await verifyApiKey(k);
       if (ok) {
         setApiKey(k);
-        addToast("Authenticated", true);
+        addToast(t("login.authenticated"), true);
         props.onLogin();
       } else {
-        addToast("Invalid API key", false);
+        addToast(t("login.invalid"), false);
       }
     } catch {
-      addToast("Failed to connect to server", false);
+      addToast(t("login.failed"), false);
     } finally {
       setLoading(false);
     }
@@ -37,16 +39,14 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
           <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-500/10">
             <KeyRound size={24} class="text-accent-500" />
           </div>
-          <h1 class="text-xl font-bold">Ktulu</h1>
-          <p class="mt-1 text-sm text-surface-500">
-            Enter your API key to continue
-          </p>
+          <h1 class="text-xl font-bold">{t("login.title")}</h1>
+          <p class="mt-1 text-sm text-surface-500">{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} class="space-y-4">
           <input
             type="password"
-            placeholder="API Key"
+            placeholder={t("login.placeholder")}
             class="w-full rounded-xl border border-surface-300 bg-surface-50 px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 dark:border-surface-700 dark:bg-surface-950 dark:placeholder:text-surface-600 dark:focus:border-accent-400"
             value={key()}
             onInput={(e) => setKey(e.currentTarget.value)}
@@ -58,7 +58,11 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
             disabled={loading() || !key().trim()}
             class="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading() ? <Loader2 size={16} class="animate-spin" /> : "Login"}
+            {loading() ? (
+              <Loader2 size={16} class="animate-spin" />
+            ) : (
+              t("login.button")
+            )}
           </button>
         </form>
       </div>
