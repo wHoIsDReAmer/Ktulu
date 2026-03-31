@@ -8,7 +8,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.pluginRoutes(pluginService: PluginService) {
-
     get("/plugins") {
         try {
             val plugins = pluginService.listPlugins()
@@ -20,8 +19,9 @@ fun Route.pluginRoutes(pluginService: PluginService) {
     }
 
     post("/plugins/{name}/toggle") {
-        val name = call.parameters["name"]
-            ?: return@post call.respond(HttpStatusCode.BadRequest, "Plugin name required")
+        val name =
+            call.parameters["name"]
+                ?: return@post call.respond(HttpStatusCode.BadRequest, "Plugin name required")
 
         try {
             val result = pluginService.togglePlugin(name)
@@ -37,8 +37,9 @@ fun Route.pluginRoutes(pluginService: PluginService) {
     }
 
     post("/plugins/{name}/unload") {
-        val name = call.parameters["name"]
-            ?: return@post call.respond(HttpStatusCode.BadRequest, "Plugin name required")
+        val name =
+            call.parameters["name"]
+                ?: return@post call.respond(HttpStatusCode.BadRequest, "Plugin name required")
 
         try {
             val result = pluginService.unloadPlugin(name)
@@ -54,8 +55,9 @@ fun Route.pluginRoutes(pluginService: PluginService) {
     }
 
     post("/plugins/{fileName}/load") {
-        val fileName = call.parameters["fileName"]
-            ?: return@post call.respond(HttpStatusCode.BadRequest, "File name required")
+        val fileName =
+            call.parameters["fileName"]
+                ?: return@post call.respond(HttpStatusCode.BadRequest, "File name required")
 
         try {
             val result = pluginService.loadPlugin(fileName)
@@ -71,8 +73,9 @@ fun Route.pluginRoutes(pluginService: PluginService) {
     }
 
     delete("/plugins/{name}") {
-        val name = call.parameters["name"]
-            ?: return@delete call.respond(HttpStatusCode.BadRequest, "Plugin name required")
+        val name =
+            call.parameters["name"]
+                ?: return@delete call.respond(HttpStatusCode.BadRequest, "Plugin name required")
 
         try {
             val removed = pluginService.removePlugin(name)

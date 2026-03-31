@@ -10,10 +10,10 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
 fun Route.marketplaceRoutes(marketplaceService: MarketplaceService) {
-
     get("/marketplace/search") {
-        val query = call.parameters["query"]
-            ?: return@get call.respond(HttpStatusCode.BadRequest, "query parameter required")
+        val query =
+            call.parameters["query"]
+                ?: return@get call.respond(HttpStatusCode.BadRequest, "query parameter required")
         val source = call.parameters["source"]
 
         try {

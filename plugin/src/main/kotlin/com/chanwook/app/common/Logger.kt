@@ -20,7 +20,10 @@ object Logger {
         output("$PREFIX§c$message")
     }
 
-    fun error(message: String, throwable: Throwable) {
+    fun error(
+        message: String,
+        throwable: Throwable,
+    ) {
         output("$PREFIX§c$message")
         output("$PREFIX§c${throwable.stackTraceToString()}")
     }

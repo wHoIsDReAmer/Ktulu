@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CopyOnWriteArrayList
 
 class BukkitConsoleService : ConsoleService {
-
     private val history = ConcurrentLinkedDeque<String>()
     private val listeners = CopyOnWriteArrayList<(String) -> Unit>()
     private var appender: AbstractAppender? = null
@@ -20,21 +19,23 @@ class BukkitConsoleService : ConsoleService {
     }
 
     fun start() {
-        val layout = PatternLayout.newBuilder()
-            .withPattern("[%d{HH:mm:ss} %level]: %msg%n")
-            .build()
+        val layout =
+            PatternLayout.newBuilder()
+                .withPattern("[%d{HH:mm:ss} %level]: %msg%n")
+                .build()
 
-        appender = object : AbstractAppender("KtuluConsole", null, layout, false, emptyArray()) {
-            override fun append(event: LogEvent) {
-                val line = String(layout.toByteArray(event)).trimEnd()
-                if (line.isNotEmpty()) {
-                    appendLog(line)
+        appender =
+            object : AbstractAppender("KtuluConsole", null, layout, false, emptyArray()) {
+                override fun append(event: LogEvent) {
+                    val line = String(layout.toByteArray(event)).trimEnd()
+                    if (line.isNotEmpty()) {
+                        appendLog(line)
+                    }
                 }
+            }.also {
+                it.start()
+                (LogManager.getRootLogger() as Logger).addAppender(it)
             }
-        }.also {
-            it.start()
-            (LogManager.getRootLogger() as Logger).addAppender(it)
-        }
     }
 
     fun stop() {
@@ -55,7 +56,7 @@ class BukkitConsoleService : ConsoleService {
     override fun dispatchCommand(command: String): Boolean {
         return try {
             Bukkit.getScheduler().callSyncMethod(
-                Bukkit.getPluginManager().getPlugin("Ktulu")!!
+                Bukkit.getPluginManager().getPlugin("Ktulu")!!,
             ) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)
             }.get()
@@ -72,7 +73,8 @@ class BukkitConsoleService : ConsoleService {
         for (listener in listeners) {
             try {
                 listener(line)
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 }

@@ -1,13 +1,12 @@
 package com.chanwook.app.server.system
 
 import com.chanwook.app.common.Logger
-import java.lang.management.ManagementFactory
-import kotlin.math.roundToInt
-
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.lang.management.ManagementFactory
+import kotlin.math.roundToInt
 
 private fun getSystemInfo(): SystemInfo {
     val osBean = ManagementFactory.getOperatingSystemMXBean() as com.sun.management.OperatingSystemMXBean

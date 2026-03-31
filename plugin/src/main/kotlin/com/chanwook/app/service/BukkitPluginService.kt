@@ -6,12 +6,10 @@ import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.PluginDescriptionFile
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import java.net.URLClassLoader
-import java.util.jar.JarFile
 import java.util.concurrent.Callable
+import java.util.jar.JarFile
 
 class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
-
     private fun <T> runOnMainThread(task: () -> T): T {
         if (Bukkit.isPrimaryThread()) return task()
         return Bukkit.getScheduler()
@@ -20,34 +18,36 @@ class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
     }
 
     override fun listPlugins(): List<PluginInfo> {
-        val loadedPlugins = runOnMainThread {
-            Bukkit.getPluginManager().plugins.map { p ->
-                PluginInfo(
-                    name = p.name,
-                    version = p.pluginMeta.version,
-                    enabled = p.isEnabled,
-                    loaded = true,
-                    description = p.pluginMeta.description ?: "",
-                    authors = p.pluginMeta.authors,
-                )
+        val loadedPlugins =
+            runOnMainThread {
+                Bukkit.getPluginManager().plugins.map { p ->
+                    PluginInfo(
+                        name = p.name,
+                        version = p.pluginMeta.version,
+                        enabled = p.isEnabled,
+                        loaded = true,
+                        description = p.pluginMeta.description ?: "",
+                        authors = p.pluginMeta.authors,
+                    )
+                }
             }
-        }
 
         val loadedNames = loadedPlugins.map { it.name.lowercase() }.toSet()
 
-        val unloadedPlugins = try {
-            File("plugins").listFiles()
-                ?.filter { it.extension == "jar" }
-                ?.filter { file ->
-                    // Skip JARs whose filename matches a loaded plugin to avoid corrupting classloaders
-                    loadedNames.none { name -> file.nameWithoutExtension.contains(name, ignoreCase = true) }
-                }
-                ?.mapNotNull { file -> readPluginYml(file) }
-                ?: emptyList()
-        } catch (e: Exception) {
-            Logger.error("Failed to scan unloaded plugins", e)
-            emptyList()
-        }
+        val unloadedPlugins =
+            try {
+                File("plugins").listFiles()
+                    ?.filter { it.extension == "jar" }
+                    ?.filter { file ->
+                        // Skip JARs whose filename matches a loaded plugin to avoid corrupting classloaders
+                        loadedNames.none { name -> file.nameWithoutExtension.contains(name, ignoreCase = true) }
+                    }
+                    ?.mapNotNull { file -> readPluginYml(file) }
+                    ?: emptyList()
+            } catch (e: Exception) {
+                Logger.error("Failed to scan unloaded plugins", e)
+                emptyList()
+            }
 
         return loadedPlugins + unloadedPlugins
     }
@@ -142,7 +142,11 @@ class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
         }
     }
 
-    private fun removeFromManager(pm: Any, target: Plugin, name: String) {
+    private fun removeFromManager(
+        pm: Any,
+        target: Plugin,
+        name: String,
+    ) {
         // Walk up the class hierarchy and find List/Map fields that contain the plugin
         fun scanAndRemove(obj: Any) {
             var cls: Class<*>? = obj.javaClass
@@ -159,7 +163,8 @@ class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
                             value.remove(name.lowercase())
                             Logger.info("Removed lookup from ${cls.simpleName}.${field.name}")
                         }
-                    } catch (_: Exception) {}
+                    } catch (_: Exception) {
+                    }
                 }
                 cls = cls.superclass
             }
@@ -169,7 +174,11 @@ class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
         scanAndRemove(pm)
 
         // Scan nested manager objects recursively (Paper wraps managers)
-        fun scanNested(obj: Any, depth: Int, visited: MutableSet<Int>) {
+        fun scanNested(
+            obj: Any,
+            depth: Int,
+            visited: MutableSet<Int>,
+        ) {
             if (depth > 4 || !visited.add(System.identityHashCode(obj))) return
             var cls: Class<*>? = obj.javaClass
             while (cls != null && cls != Any::class.java) {
@@ -180,11 +189,13 @@ class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
                         val className = nested.javaClass.name
                         if (className.contains("Plugin", ignoreCase = true) &&
                             !className.startsWith("java.") &&
-                            !className.startsWith("kotlin.")) {
+                            !className.startsWith("kotlin.")
+                        ) {
                             scanAndRemove(nested)
                             scanNested(nested, depth + 1, visited)
                         }
-                    } catch (_: Exception) {}
+                    } catch (_: Exception) {
+                    }
                 }
                 cls = cls.superclass
             }
@@ -202,11 +213,12 @@ class BukkitPluginService(private val plugin: JavaPlugin) : PluginService {
         }
 
         val pluginsDir = File("plugins")
-        val targetFile = File(pluginsDir, name).takeIf { it.exists() && it.extension == "jar" }
-            ?: File(pluginsDir, "$name.jar").takeIf { it.exists() }
-            ?: pluginsDir.listFiles()?.firstOrNull {
-                it.name.endsWith(".jar") && it.name.contains(name, ignoreCase = true)
-            }
+        val targetFile =
+            File(pluginsDir, name).takeIf { it.exists() && it.extension == "jar" }
+                ?: File(pluginsDir, "$name.jar").takeIf { it.exists() }
+                ?: pluginsDir.listFiles()?.firstOrNull {
+                    it.name.endsWith(".jar") && it.name.contains(name, ignoreCase = true)
+                }
 
         return targetFile?.delete() ?: false
     }

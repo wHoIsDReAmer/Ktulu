@@ -15,19 +15,26 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 class DefaultMarketplaceService(
-    private val pluginsDir: File = File("plugins")
+    private val pluginsDir: File = File("plugins"),
 ) : MarketplaceService {
-
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
-
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(json)
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            prettyPrint = true
         }
-        followRedirects = true
-    }
 
-    override suspend fun search(query: String, source: String?): List<MarketplacePlugin> {
+    private val client =
+        HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json(json)
+            }
+            followRedirects = true
+        }
+
+    override suspend fun search(
+        query: String,
+        source: String?,
+    ): List<MarketplacePlugin> {
         if (query.isBlank()) return emptyList()
 
         val results = mutableListOf<MarketplacePlugin>()
@@ -51,7 +58,10 @@ class DefaultMarketplaceService(
         return results
     }
 
-    override suspend fun install(source: String, id: String): Boolean {
+    override suspend fun install(
+        source: String,
+        id: String,
+    ): Boolean {
         return try {
             when (source) {
                 "modrinth" -> installFromModrinth(id)
@@ -65,11 +75,12 @@ class DefaultMarketplaceService(
     }
 
     private suspend fun searchModrinth(query: String): List<MarketplacePlugin> {
-        val response: ModrinthSearchResponse = client.get("https://api.modrinth.com/v2/search") {
-            parameter("query", query)
-            parameter("facets", """[["project_type:plugin"],["server_side:required","server_side:optional"]]""")
-            parameter("limit", 20)
-        }.body()
+        val response: ModrinthSearchResponse =
+            client.get("https://api.modrinth.com/v2/search") {
+                parameter("query", query)
+                parameter("facets", """[["project_type:plugin"],["server_side:required","server_side:optional"]]""")
+                parameter("limit", 20)
+            }.body()
 
         return response.hits.map { hit ->
             MarketplacePlugin(
@@ -88,11 +99,12 @@ class DefaultMarketplaceService(
     }
 
     private suspend fun searchHangar(query: String): List<MarketplacePlugin> {
-        val response: HangarSearchResponse = client.get("https://hangar.papermc.io/api/v1/projects") {
-            parameter("q", query)
-            parameter("platform", "PAPER")
-            parameter("limit", 20)
-        }.body()
+        val response: HangarSearchResponse =
+            client.get("https://hangar.papermc.io/api/v1/projects") {
+                parameter("q", query)
+                parameter("platform", "PAPER")
+                parameter("limit", 20)
+            }.body()
 
         return response.result.map { project ->
             MarketplacePlugin(
@@ -111,10 +123,11 @@ class DefaultMarketplaceService(
     }
 
     private suspend fun installFromModrinth(projectId: String): Boolean {
-        val versions: List<ModrinthVersion> = client.get("https://api.modrinth.com/v2/project/$projectId/version") {
-            parameter("loaders", """["paper","bukkit","spigot"]""")
-            parameter("limit", 1)
-        }.body()
+        val versions: List<ModrinthVersion> =
+            client.get("https://api.modrinth.com/v2/project/$projectId/version") {
+                parameter("loaders", """["paper","bukkit","spigot"]""")
+                parameter("limit", 1)
+            }.body()
 
         val version = versions.firstOrNull() ?: return false
         val file = version.files.firstOrNull { it.primary } ?: version.files.firstOrNull() ?: return false
@@ -128,25 +141,30 @@ class DefaultMarketplaceService(
         if (parts.size != 2) return false
         val (owner, slug) = parts
 
-        val response: HangarVersionsResponse = client.get(
-            "https://hangar.papermc.io/api/v1/projects/$slug/versions"
-        ) {
-            parameter("limit", 1)
-            parameter("platform", "PAPER")
-        }.body()
+        val response: HangarVersionsResponse =
+            client.get(
+                "https://hangar.papermc.io/api/v1/projects/$slug/versions",
+            ) {
+                parameter("limit", 1)
+                parameter("platform", "PAPER")
+            }.body()
 
         val version = response.result.firstOrNull() ?: return false
         val downloadUrl = "https://hangar.papermc.io/api/v1/projects/$slug/versions/${version.name}/PAPER/download"
-        val filename = "${slug}-${version.name}.jar"
+        val filename = "$slug-${version.name}.jar"
 
         return downloadFile(downloadUrl, filename)
     }
 
-    private val downloadClient = HttpClient(CIO) {
-        followRedirects = true
-    }
+    private val downloadClient =
+        HttpClient(CIO) {
+            followRedirects = true
+        }
 
-    private suspend fun downloadFile(url: String, filename: String): Boolean {
+    private suspend fun downloadFile(
+        url: String,
+        filename: String,
+    ): Boolean {
         pluginsDir.mkdirs()
         val targetFile = File(pluginsDir, filename)
 

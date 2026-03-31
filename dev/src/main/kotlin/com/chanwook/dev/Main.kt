@@ -8,14 +8,17 @@ fun main() {
     Logger.init { println(it) }
 
     val consoleService = MockConsoleService().also { it.start() }
-    val server = KtorServer(MockPluginService(), DefaultMarketplaceService(), consoleService)
+    val fileService = MockFileService()
+    val server = KtorServer(MockPluginService(), DefaultMarketplaceService(), fileService, consoleService)
     Logger.info("개발 서버를 시작합니다. (http://localhost:8332)")
     server.startServer()
 
-    Runtime.getRuntime().addShutdownHook(Thread {
-        Logger.info("개발 서버를 종료합니다.")
-        server.stopServer()
-    })
+    Runtime.getRuntime().addShutdownHook(
+        Thread {
+            Logger.info("개발 서버를 종료합니다.")
+            server.stopServer()
+        },
+    )
 
     Thread.currentThread().join()
 }

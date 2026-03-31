@@ -3,6 +3,7 @@ package com.chanwook.app
 import com.chanwook.app.common.Logger
 import com.chanwook.app.server.KtorServer
 import com.chanwook.app.service.BukkitConsoleService
+import com.chanwook.app.service.BukkitFileService
 import com.chanwook.app.service.BukkitPluginService
 import com.chanwook.app.service.DefaultMarketplaceService
 import org.bukkit.Bukkit
@@ -19,7 +20,9 @@ class Ktulu : JavaPlugin() {
         Logger.info("플러그인이 활성화 되었습니다.")
 
         consoleService = BukkitConsoleService().also { it.start() }
-        ktorServer = KtorServer(BukkitPluginService(this), DefaultMarketplaceService(), consoleService)
+        val serverRoot = dataFolder.canonicalFile.parentFile.parentFile
+        val fileService = BukkitFileService(serverRoot)
+        ktorServer = KtorServer(BukkitPluginService(this), DefaultMarketplaceService(), fileService, consoleService)
         ktorServer?.startServer()
     }
 

@@ -10,7 +10,6 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.isActive
 
 fun Route.consoleRoutes(consoleService: ConsoleService) {
-
     webSocket("/console") {
         Logger.info("WebSocket console client connected")
 
@@ -21,9 +20,10 @@ fun Route.consoleRoutes(consoleService: ConsoleService) {
         }
 
         // Register live listener
-        val removeListener = consoleService.addListener { line ->
-            runCatching { outgoing.trySend(Frame.Text(line)) }
-        }
+        val removeListener =
+            consoleService.addListener { line ->
+                runCatching { outgoing.trySend(Frame.Text(line)) }
+            }
 
         try {
             // Receive commands

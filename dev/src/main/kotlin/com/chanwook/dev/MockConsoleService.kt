@@ -8,21 +8,21 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.thread
 
 class MockConsoleService : ConsoleService {
-
     private val history = ConcurrentLinkedDeque<String>()
     private val listeners = CopyOnWriteArrayList<(String) -> Unit>()
     private val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
-    private val mockMessages = listOf(
-        "INFO" to "Server started on port 25565",
-        "INFO" to "Loading world [world]",
-        "INFO" to "Preparing spawn area: 100%",
-        "INFO" to "Done (3.245s)! For help, type \"help\"",
-        "INFO" to "Steve joined the game",
-        "WARN" to "Can't keep up! Is the server overloaded?",
-        "INFO" to "Alex joined the game",
-        "INFO" to "Steve left the game",
-    )
+    private val mockMessages =
+        listOf(
+            "INFO" to "Server started on port 25565",
+            "INFO" to "Loading world [world]",
+            "INFO" to "Preparing spawn area: 100%",
+            "INFO" to "Done (3.245s)! For help, type \"help\"",
+            "INFO" to "Steve joined the game",
+            "WARN" to "Can't keep up! Is the server overloaded?",
+            "INFO" to "Alex joined the game",
+            "INFO" to "Steve left the game",
+        )
 
     fun start() {
         for (msg in mockMessages) {
@@ -59,7 +59,8 @@ class MockConsoleService : ConsoleService {
         for (listener in listeners) {
             try {
                 listener(line)
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 }

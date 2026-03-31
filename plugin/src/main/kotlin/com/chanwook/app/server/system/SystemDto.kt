@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class SystemInfo(
     val cpuUsage: Double,
     val memoryUsage: Long,
-    val totalMemory: Long
+    val totalMemory: Long,
 )
