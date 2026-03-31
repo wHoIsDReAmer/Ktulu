@@ -233,7 +233,7 @@ const Users: Component = () => {
                             )
                           }
                           disabled={isActing(`${player.name}/players/gamemode`)}
-                          class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+                          class="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
                         >
                           <Gamepad2 size={12} />
                           {mode.charAt(0) + mode.slice(1).toLowerCase()}
@@ -251,7 +251,7 @@ const Users: Component = () => {
                             : t("users.opped", { name: player.name }),
                         )
                       }
-                      class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-yellow-600 transition-colors hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-950/30"
+                      class="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium text-yellow-600 transition-colors hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-950/30"
                     >
                       {player.op ? (
                         <>
@@ -283,7 +283,7 @@ const Users: Component = () => {
                           },
                         })
                       }
-                      class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-orange-500 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                      class="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium text-orange-500 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950/30"
                     >
                       <UserMinus size={12} /> {t("users.kick")}
                     </button>
@@ -305,7 +305,7 @@ const Users: Component = () => {
                           },
                         })
                       }
-                      class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
+                      class="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
                       <Ban size={12} /> {t("users.ban")}
                     </button>

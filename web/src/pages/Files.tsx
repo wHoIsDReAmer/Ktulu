@@ -311,7 +311,7 @@ const Files: Component = () => {
                           <button
                             type="button"
                             onClick={() => openEditor(filePath(file.name))}
-                            class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
+                            class="whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
                           >
                             <span class="flex items-center gap-1">
                               <Pencil size={12} /> {t("files.edit")}
@@ -327,7 +327,7 @@ const Files: Component = () => {
                               console.error("Download failed", e);
                             }
                           }}
-                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
+                          class="whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
                         >
                           <span class="flex items-center gap-1">
                             <Download size={12} />{" "}
@@ -345,7 +345,7 @@ const Files: Component = () => {
                             })
                           }
                           disabled={deleting() === file.name}
-                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 dark:hover:text-red-400 disabled:opacity-50"
+                          class="whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 dark:hover:text-red-400 disabled:opacity-50"
                         >
                           <span class="flex items-center gap-1">
                             {deleting() === file.name ? (

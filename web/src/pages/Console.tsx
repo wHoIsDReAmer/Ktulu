@@ -265,7 +265,7 @@ const Console: Component = () => {
             <button
               type="button"
               onClick={() => setLogs([])}
-              class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
+              class="whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
             >
               <span class="flex items-center gap-1">
                 <Trash size={12} /> {t("console.clear")}
@@ -274,7 +274,7 @@ const Console: Component = () => {
             <button
               type="button"
               onClick={scrollToBottom}
-              class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
+              class="whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
             >
               <span class="flex items-center gap-1">
                 <ArrowDown size={12} /> {t("console.bottom")}

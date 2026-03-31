@@ -173,7 +173,7 @@ const Plugins: Component = () => {
                   fallback={
                     <button
                       type="button"
-                      class="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-green-700 active:scale-95 disabled:opacity-40"
+                      class="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-green-700 active:scale-95 disabled:opacity-40"
                       onClick={() => loadPlugin(plugin.fileName, plugin.name)}
                       disabled={loading() === plugin.fileName}
                     >
@@ -189,7 +189,7 @@ const Plugins: Component = () => {
                 >
                   <button
                     type="button"
-                    class="flex items-center gap-1.5 rounded-lg bg-surface-200 px-3 py-1.5 text-sm font-medium text-surface-700 transition-all hover:bg-surface-300 active:scale-95 disabled:opacity-40 dark:bg-surface-700 dark:text-surface-300 dark:hover:bg-surface-600"
+                    class="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-surface-200 px-3 py-1.5 text-sm font-medium text-surface-700 transition-all hover:bg-surface-300 active:scale-95 disabled:opacity-40 dark:bg-surface-700 dark:text-surface-300 dark:hover:bg-surface-600"
                     onClick={() => setUnloadTarget(plugin.name)}
                     disabled={
                       unloading() === plugin.name || plugin.name === "Ktulu"
@@ -206,7 +206,7 @@ const Plugins: Component = () => {
                 </Show>
                 <button
                   type="button"
-                  class="rounded-lg px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-50 disabled:opacity-40 dark:hover:bg-red-950/30"
+                  class="shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-50 disabled:opacity-40 dark:hover:bg-red-950/30"
                   onClick={() =>
                     setRemoveTarget({
                       id: plugin.loaded ? plugin.name : plugin.fileName,
