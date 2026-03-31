@@ -12,12 +12,14 @@ repositories {
 dependencies {
     implementation(libs.commons.text)
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("org.apache.logging.log4j:log4j-core:2.24.1")
 
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)

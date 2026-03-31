@@ -7,6 +7,11 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      "/api/console": {
+        target: "http://localhost:8332",
+        ws: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
       "/api": {
         target: "http://localhost:8332",
         rewrite: (path) => path.replace(/^\/api/, ""),

@@ -1,9 +1,11 @@
 package com.chanwook.app.server
 
 import com.chanwook.app.common.Logger
+import com.chanwook.app.server.console.consoleRoutes
 import com.chanwook.app.server.marketplace.marketplaceRoutes
 import com.chanwook.app.server.plugin.pluginRoutes
 import com.chanwook.app.server.system.systemRoutes
+import com.chanwook.app.service.ConsoleService
 import com.chanwook.app.service.MarketplaceService
 import com.chanwook.app.service.PluginService
 import io.ktor.http.*
@@ -15,11 +17,14 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 import kotlinx.serialization.json.Json
+import java.time.Duration
 
 class KtorServer(
     private val pluginService: PluginService,
     private val marketplaceService: MarketplaceService,
+    private val consoleService: ConsoleService? = null,
 ) {
     private var server: ApplicationEngine? = null
 
@@ -41,16 +46,21 @@ class KtorServer(
                 }
             }
 
+            install(WebSockets) {
+                pingPeriod = Duration.ofSeconds(15)
+            }
+
             routing {
                 systemRoutes()
                 pluginRoutes(pluginService)
                 marketplaceRoutes(marketplaceService)
+                consoleService?.let { consoleRoutes(it) }
             }
         }.apply { start(wait = false) }
     }
 
     fun stopServer() {
-        server?.stop(1000, 2000)
+        server?.stop(2000, 5000)
         server = null
     }
 }
