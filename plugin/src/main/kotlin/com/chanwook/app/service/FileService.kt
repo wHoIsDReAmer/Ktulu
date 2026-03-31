@@ -24,6 +24,8 @@ interface FileService {
 
     fun getAbsolutePath(path: String): java.io.File?
 
+    fun getDownloadPath(path: String): java.io.File?
+
     fun saveUpload(
         path: String,
         fileName: String,

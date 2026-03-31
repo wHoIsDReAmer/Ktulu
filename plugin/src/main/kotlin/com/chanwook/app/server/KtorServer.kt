@@ -22,14 +22,41 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import kotlinx.serialization.json.Json
 import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 
 class KtorServer(
     private val pluginService: PluginService,
     private val marketplaceService: MarketplaceService,
     private val fileService: FileService? = null,
     private val consoleService: ConsoleService? = null,
+    private val getServerStats: (() -> com.chanwook.app.server.system.ServerStats)? = null,
+    private var apiKey: String? = null,
+    private var reverseProxy: Boolean = false,
+    private val onReloadConfig: (() -> Unit)? = null,
 ) {
     private var server: ApplicationEngine? = null
+    private val requestCounts = ConcurrentHashMap<String, MutableList<Long>>()
+
+    companion object {
+        private const val RATE_LIMIT = 60
+        private const val RATE_WINDOW_MS = 60_000L
+    }
+
+    fun updateConfig(
+        newApiKey: String?,
+        newReverseProxy: Boolean,
+    ) {
+        apiKey = newApiKey
+        reverseProxy = newReverseProxy
+    }
+
+    fun resolveClientIp(call: io.ktor.server.application.ApplicationCall): String {
+        if (reverseProxy) {
+            call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()?.let { return it }
+            call.request.headers["X-Real-IP"]?.let { return it }
+        }
+        return call.request.local.remoteAddress
+    }
 
     fun startServer() {
         if (server != null) return
@@ -59,18 +86,75 @@ class KtorServer(
                     pingPeriod = Duration.ofSeconds(15)
                 }
 
+                intercept(ApplicationCallPipeline.Plugins) {
+                    val ip = resolveClientIp(call)
+                    val now = System.currentTimeMillis()
+                    val timestamps = requestCounts.computeIfAbsent(ip) { mutableListOf() }
+                    val limited =
+                        synchronized(timestamps) {
+                            timestamps.removeAll { it < now - RATE_WINDOW_MS }
+                            if (timestamps.size >= RATE_LIMIT) {
+                                true
+                            } else {
+                                timestamps.add(now)
+                                false
+                            }
+                        }
+                    if (limited) {
+                        call.respond(HttpStatusCode.TooManyRequests, mapOf("error" to "Rate limit exceeded"))
+                        finish()
+                        return@intercept
+                    }
+                }
+
+                if (apiKey != null) {
+                    intercept(ApplicationCallPipeline.Plugins) {
+                        val path = call.request.local.uri
+                        if (path == "/auth/verify") return@intercept
+                        val token =
+                            call.request.headers["Authorization"]?.removePrefix("Bearer ")
+                                ?: call.request.queryParameters["token"]
+                        if (token != apiKey) {
+                            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid API key"))
+                            finish()
+                        }
+                    }
+                }
+
                 routing {
-                    systemRoutes()
+                    get("/auth/verify") {
+                        val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
+                        if (apiKey == null || token == apiKey) {
+                            call.respond(HttpStatusCode.OK, mapOf("authenticated" to true))
+                        } else {
+                            call.respond(HttpStatusCode.Unauthorized, mapOf("authenticated" to false))
+                        }
+                    }
+                    post("/config/reload") {
+                        try {
+                            onReloadConfig?.invoke()
+                            call.respond(HttpStatusCode.OK, mapOf("message" to "Config reloaded"))
+                        } catch (e: Exception) {
+                            Logger.error("Error reloading config", e)
+                            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to reload config"))
+                        }
+                    }
+                    systemRoutes(getServerStats)
                     pluginRoutes(pluginService)
                     marketplaceRoutes(marketplaceService)
                     fileService?.let { fileRoutes(it) }
-                    consoleService?.let { consoleRoutes(it) }
+                    consoleService?.let { consoleRoutes(it, ::resolveClientIp) }
                 }
             }.apply { start(wait = false) }
     }
 
     fun stopServer() {
+        // Close active WebSocket sessions first
+        kotlinx.coroutines.runBlocking {
+            com.chanwook.app.server.console.closeAllSessions()
+        }
         server?.stop(2000, 5000)
         server = null
+        requestCounts.clear()
     }
 }

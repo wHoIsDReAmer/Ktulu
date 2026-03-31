@@ -1,0 +1,12 @@
+# Ktulu Configuration
+
+# API key for web dashboard authentication.
+# Leave empty to disable authentication (not recommended for production).
+api-key: ""
+
+# Web server port
+port: 8332
+
+# Enable if behind a reverse proxy (nginx, Cloudflare, etc.)
+# When enabled, uses X-Forwarded-For / X-Real-IP headers for client IP.
+reverse-proxy: false

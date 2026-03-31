@@ -1,12 +1,10 @@
 import {
-  Check,
   Loader2,
   Package,
   Play,
   RefreshCw,
   Square,
   Trash2,
-  X,
 } from "lucide-solid";
 import {
   type Component,
@@ -15,7 +13,7 @@ import {
   For,
   Show,
 } from "solid-js";
-import { Portal } from "solid-js/web";
+import { addToast, ToastContainer } from "../components/Toast";
 import { deleteJson, fetchJson, postJson } from "../lib/api";
 
 interface Plugin {
@@ -28,35 +26,12 @@ interface Plugin {
   fileName: string;
 }
 
-interface Toast {
-  id: number;
-  message: string;
-  ok: boolean;
-  leaving: boolean;
-}
-
-let toastId = 0;
-
 const Plugins: Component = () => {
   const [plugins, { refetch, mutate }] = createResource(() =>
     fetchJson<Plugin[]>("/plugins"),
   );
   const [search, setSearch] = createSignal("");
   const [removing, setRemoving] = createSignal<string | null>(null);
-  const [toasts, setToasts] = createSignal<Toast[]>([]);
-
-  const addToast = (message: string, ok: boolean) => {
-    const id = ++toastId;
-    setToasts((prev) => [...prev, { id, message, ok, leaving: false }]);
-    setTimeout(() => {
-      setToasts((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)),
-      );
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 300);
-    }, 3000);
-  };
 
   const filtered = () => {
     const list = plugins() ?? [];
@@ -254,22 +229,7 @@ const Plugins: Component = () => {
         </For>
       </div>
 
-      <Portal>
-        <div class="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
-          <For each={toasts()}>
-            {(toast) => (
-              <div
-                class={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg ${
-                  toast.ok ? "bg-green-600" : "bg-red-600"
-                } ${toast.leaving ? "animate-toast-out" : "animate-toast-in"}`}
-              >
-                {toast.ok ? <Check size={16} /> : <X size={16} />}
-                {toast.message}
-              </div>
-            )}
-          </For>
-        </div>
-      </Portal>
+      <ToastContainer />
     </div>
   );
 };
