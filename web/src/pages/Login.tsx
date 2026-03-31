@@ -1,6 +1,6 @@
 import { KeyRound, Loader2 } from "lucide-solid";
 import { type Component, createSignal } from "solid-js";
-import { addToast, ToastContainer } from "../components/Toast";
+import { addToast } from "../components/Toast";
 import { verifyApiKey } from "../lib/api";
 import { setApiKey } from "../lib/auth";
 
@@ -62,7 +62,6 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
           </button>
         </form>
       </div>
-      <ToastContainer />
     </div>
   );
 };

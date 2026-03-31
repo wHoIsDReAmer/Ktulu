@@ -13,7 +13,8 @@ import {
   For,
   Show,
 } from "solid-js";
-import { addToast, ToastContainer } from "../components/Toast";
+import ConfirmModal from "../components/ConfirmModal";
+import { addToast } from "../components/Toast";
 import { deleteJson, fetchJson, postJson } from "../lib/api";
 
 interface Plugin {
@@ -32,6 +33,11 @@ const Plugins: Component = () => {
   );
   const [search, setSearch] = createSignal("");
   const [removing, setRemoving] = createSignal<string | null>(null);
+  const [removeTarget, setRemoveTarget] = createSignal<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [unloadTarget, setUnloadTarget] = createSignal<string | null>(null);
 
   const filtered = () => {
     const list = plugins() ?? [];
@@ -182,7 +188,7 @@ const Plugins: Component = () => {
                   <button
                     type="button"
                     class="flex items-center gap-1.5 rounded-lg bg-surface-200 px-3 py-1.5 text-sm font-medium text-surface-700 transition-all hover:bg-surface-300 active:scale-95 disabled:opacity-40 dark:bg-surface-700 dark:text-surface-300 dark:hover:bg-surface-600"
-                    onClick={() => unloadPlugin(plugin.name)}
+                    onClick={() => setUnloadTarget(plugin.name)}
                     disabled={
                       unloading() === plugin.name || plugin.name === "Ktulu"
                     }
@@ -200,10 +206,10 @@ const Plugins: Component = () => {
                   type="button"
                   class="rounded-lg px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-50 disabled:opacity-40 dark:hover:bg-red-950/30"
                   onClick={() =>
-                    removePlugin(
-                      plugin.loaded ? plugin.name : plugin.fileName,
-                      plugin.name,
-                    )
+                    setRemoveTarget({
+                      id: plugin.loaded ? plugin.name : plugin.fileName,
+                      name: plugin.name,
+                    })
                   }
                   disabled={
                     removing() ===
@@ -229,7 +235,35 @@ const Plugins: Component = () => {
         </For>
       </div>
 
-      <ToastContainer />
+      <Show when={unloadTarget()}>
+        <ConfirmModal
+          title="Unload plugin"
+          message={`Are you sure you want to unload "${unloadTarget()}"? This may affect server functionality.`}
+          confirmLabel="Unload"
+          danger
+          onConfirm={async () => {
+            const name = unloadTarget();
+            if (name) await unloadPlugin(name);
+            setUnloadTarget(null);
+          }}
+          onCancel={() => setUnloadTarget(null)}
+        />
+      </Show>
+
+      <Show when={removeTarget()}>
+        <ConfirmModal
+          title="Remove plugin"
+          message={`Are you sure you want to remove "${removeTarget()?.name}"? The plugin file will be deleted.`}
+          confirmLabel="Remove"
+          danger
+          onConfirm={async () => {
+            const target = removeTarget();
+            if (target) await removePlugin(target.id, target.name);
+            setRemoveTarget(null);
+          }}
+          onCancel={() => setRemoveTarget(null)}
+        />
+      </Show>
     </div>
   );
 };

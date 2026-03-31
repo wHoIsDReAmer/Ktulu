@@ -1,5 +1,6 @@
 import { Route, Router } from "@solidjs/router";
 import { createSignal, lazy, onMount, Show } from "solid-js";
+import { ToastContainer } from "./components/Toast";
 import MainLayout from "./layouts/MainLayout";
 import { verifyApiKey } from "./lib/api";
 import { clearApiKey, getApiKey } from "./lib/auth";
@@ -34,20 +35,23 @@ export default function App() {
   });
 
   return (
-    <Show when={!checking()}>
-      <Show
-        when={authed()}
-        fallback={<Login onLogin={() => setAuthed(true)} />}
-      >
-        <Router root={MainLayout}>
-          <Route path="/" component={Dashboard} />
-          <Route path="/plugins" component={Plugins} />
-          <Route path="/files" component={Files} />
-          <Route path="/users" component={Users} />
-          <Route path="/console" component={Console} />
-          <Route path="/marketplace" component={Marketplace} />
-        </Router>
+    <>
+      <Show when={!checking()}>
+        <Show
+          when={authed()}
+          fallback={<Login onLogin={() => setAuthed(true)} />}
+        >
+          <Router root={MainLayout}>
+            <Route path="/" component={Dashboard} />
+            <Route path="/plugins" component={Plugins} />
+            <Route path="/files" component={Files} />
+            <Route path="/users" component={Users} />
+            <Route path="/console" component={Console} />
+            <Route path="/marketplace" component={Marketplace} />
+          </Router>
+        </Show>
       </Show>
-    </Show>
+      <ToastContainer />
+    </>
   );
 }

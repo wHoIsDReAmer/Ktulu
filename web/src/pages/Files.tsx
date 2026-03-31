@@ -17,6 +17,8 @@ import {
   For,
   Show,
 } from "solid-js";
+import ConfirmModal from "../components/ConfirmModal";
+import { addToast } from "../components/Toast";
 import {
   deleteJson,
   downloadFile,
@@ -83,6 +85,10 @@ const Files: Component = () => {
   const [saving, setSaving] = createSignal(false);
   const [uploading, setUploading] = createSignal(false);
   const [deleting, setDeleting] = createSignal<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = createSignal<{
+    name: string;
+    type: string;
+  } | null>(null);
 
   const [files, { refetch }] = createResource(path, (p) =>
     fetchJson<FileEntry[]>(`/files?path=${encodeURIComponent(p)}`),
@@ -159,22 +165,21 @@ const Files: Component = () => {
     input.click();
   };
 
-  const handleDelete = async (name: string, type: string) => {
-    const fullPath = path() === "/" ? `/${name}` : `${path()}/${name}`;
-    if (
-      !confirm(
-        `${type === "directory" ? "폴더" : "파일"} "${name}"을(를) 삭제하시겠습니까?`,
-      )
-    )
-      return;
-    setDeleting(name);
+  const confirmDelete = async () => {
+    const target = deleteTarget();
+    if (!target) return;
+    const fullPath =
+      path() === "/" ? `/${target.name}` : `${path()}/${target.name}`;
+    setDeleting(target.name);
     try {
       await deleteJson(`/files?path=${encodeURIComponent(fullPath)}`);
       refetch();
-    } catch (e) {
-      console.error("Delete failed", e);
+      addToast(`${target.name} deleted`, true);
+    } catch {
+      addToast(`Failed to delete ${target.name}`, false);
     } finally {
       setDeleting(null);
+      setDeleteTarget(null);
     }
   };
 
@@ -330,7 +335,12 @@ const Files: Component = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(file.name, file.type)}
+                          onClick={() =>
+                            setDeleteTarget({
+                              name: file.name,
+                              type: file.type,
+                            })
+                          }
                           disabled={deleting() === file.name}
                           class="rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 dark:hover:text-red-400 disabled:opacity-50"
                         >
@@ -352,6 +362,17 @@ const Files: Component = () => {
           </table>
         </Show>
       </div>
+
+      <Show when={deleteTarget()}>
+        <ConfirmModal
+          title={`Delete ${deleteTarget()?.type === "directory" ? "folder" : "file"}`}
+          message={`Are you sure you want to delete "${deleteTarget()?.name}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      </Show>
 
       <Show when={editPath()}>
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

@@ -20,6 +20,7 @@ import {
   Show,
 } from "solid-js";
 import Card from "../components/Card";
+import ConfirmModal from "../components/ConfirmModal";
 import { addToast } from "../components/Toast";
 import { fetchJson, postJsonBody } from "../lib/api";
 
@@ -40,6 +41,14 @@ interface PlayerInfo {
 interface WhitelistData {
   enabled: boolean;
   players: string[];
+}
+
+interface ConfirmState {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  danger: boolean;
+  onConfirm: () => Promise<void>;
 }
 
 const gameModes = ["SURVIVAL", "CREATIVE", "ADVENTURE", "SPECTATOR"];
@@ -69,6 +78,7 @@ const Users: Component = () => {
   const [tab, setTab] = createSignal<"players" | "banned" | "whitelist">(
     "players",
   );
+  const [confirm, setConfirm] = createSignal<ConfirmState | null>(null);
 
   const filtered = () => {
     const q = search().toLowerCase();
@@ -94,6 +104,9 @@ const Users: Component = () => {
       setActing(null);
     }
   };
+
+  const showConfirm = (state: ConfirmState) => setConfirm(state);
+  const closeConfirm = () => setConfirm(null);
 
   const isActing = (key: string) => acting() === key;
 
@@ -256,11 +269,20 @@ const Users: Component = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        action(
-                          "/players/kick",
-                          { name: player.name },
-                          `${player.name} kicked`,
-                        )
+                        showConfirm({
+                          title: `Kick ${player.name}`,
+                          message: `Are you sure you want to kick ${player.name}?`,
+                          confirmLabel: "Kick",
+                          danger: true,
+                          onConfirm: async () => {
+                            await action(
+                              "/players/kick",
+                              { name: player.name },
+                              `${player.name} kicked`,
+                            );
+                            closeConfirm();
+                          },
+                        })
                       }
                       class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-orange-500 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950/30"
                     >
@@ -269,14 +291,22 @@ const Users: Component = () => {
                     {/* Ban */}
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!confirm(`Ban ${player.name}?`)) return;
-                        action(
-                          "/players/ban",
-                          { name: player.name },
-                          `${player.name} banned`,
-                        );
-                      }}
+                      onClick={() =>
+                        showConfirm({
+                          title: `Ban ${player.name}`,
+                          message: `Are you sure you want to ban ${player.name}? They will not be able to join the server.`,
+                          confirmLabel: "Ban",
+                          danger: true,
+                          onConfirm: async () => {
+                            await action(
+                              "/players/ban",
+                              { name: player.name },
+                              `${player.name} banned`,
+                            );
+                            closeConfirm();
+                          },
+                        })
+                      }
                       class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
                       <Ban size={12} /> Ban
@@ -426,11 +456,20 @@ const Users: Component = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        action(
-                          "/whitelist/remove",
-                          { name },
-                          `${name} removed from whitelist`,
-                        )
+                        showConfirm({
+                          title: "Remove from Whitelist",
+                          message: `Are you sure you want to remove ${name} from the whitelist?`,
+                          confirmLabel: "Remove",
+                          danger: true,
+                          onConfirm: async () => {
+                            await action(
+                              "/whitelist/remove",
+                              { name },
+                              `${name} removed from whitelist`,
+                            );
+                            closeConfirm();
+                          },
+                        })
                       }
                       class="text-surface-400 transition-colors hover:text-red-500"
                     >
@@ -442,6 +481,20 @@ const Users: Component = () => {
             </div>
           </Show>
         </Card>
+      </Show>
+
+      {/* Confirm Modal */}
+      <Show when={confirm()}>
+        {(c) => (
+          <ConfirmModal
+            title={c().title}
+            message={c().message}
+            confirmLabel={c().confirmLabel}
+            danger={c().danger}
+            onConfirm={c().onConfirm}
+            onCancel={closeConfirm}
+          />
+        )}
       </Show>
     </div>
   );
