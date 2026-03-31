@@ -9,6 +9,7 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import { getApiKey } from "../lib/auth";
 
 const ANSI_16_COLORS: Record<number, string> = {
   30: "#000",
@@ -145,7 +146,9 @@ const Console: Component = () => {
     if (ws?.readyState === WebSocket.OPEN) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const url = `${protocol}//${window.location.host}/api/console`;
+    const token = getApiKey();
+    const qs = token ? `?token=${encodeURIComponent(token)}` : "";
+    const url = `${protocol}//${window.location.host}/api/console${qs}`;
 
     ws = new WebSocket(url);
 

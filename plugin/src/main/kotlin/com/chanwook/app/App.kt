@@ -19,10 +19,20 @@ class Ktulu : JavaPlugin() {
 
         Logger.info("플러그인이 활성화 되었습니다.")
 
+        saveDefaultConfig()
+        val apiKey = config.getString("api-key")?.takeIf { it.isNotBlank() }
+
         consoleService = BukkitConsoleService().also { it.start() }
         val serverRoot = dataFolder.canonicalFile.parentFile.parentFile
         val fileService = BukkitFileService(serverRoot)
-        ktorServer = KtorServer(BukkitPluginService(this), DefaultMarketplaceService(), fileService, consoleService)
+        ktorServer =
+            KtorServer(
+                BukkitPluginService(this),
+                DefaultMarketplaceService(),
+                fileService,
+                consoleService,
+                apiKey,
+            )
         ktorServer?.startServer()
     }
 
