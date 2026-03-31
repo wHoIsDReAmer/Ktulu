@@ -10,11 +10,9 @@ export default defineConfig({
       "/api/console": {
         target: "http://localhost:8332",
         ws: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
       },
       "/api": {
         target: "http://localhost:8332",
-        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },

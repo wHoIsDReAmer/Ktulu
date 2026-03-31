@@ -17,6 +17,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
@@ -91,7 +92,7 @@ class KtorServer(
                 }
 
                 intercept(ApplicationCallPipeline.Plugins) {
-                    if (call.request.local.uri != "/auth/verify") return@intercept
+                    if (call.request.local.uri != "/api/auth/verify") return@intercept
                     val ip = resolveClientIp(call)
                     val now = System.currentTimeMillis()
                     val timestamps = requestCounts.computeIfAbsent(ip) { mutableListOf() }
@@ -115,7 +116,8 @@ class KtorServer(
                 if (apiKey != null) {
                     intercept(ApplicationCallPipeline.Plugins) {
                         val path = call.request.local.uri
-                        if (path == "/auth/verify") return@intercept
+                        if (!path.startsWith("/api/")) return@intercept
+                        if (path == "/api/auth/verify") return@intercept
                         val token =
                             call.request.headers["Authorization"]?.removePrefix("Bearer ")
                                 ?: call.request.queryParameters["token"]
@@ -127,30 +129,38 @@ class KtorServer(
                 }
 
                 routing {
-                    get("/auth/verify") {
-                        val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
-                        if (apiKey == null || token == apiKey) {
-                            call.respond(HttpStatusCode.OK, mapOf("authenticated" to true))
-                        } else {
-                            call.respond(HttpStatusCode.Unauthorized, mapOf("authenticated" to false))
+                    route("/api") {
+                        get("/auth/verify") {
+                            val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
+                            if (apiKey == null || token == apiKey) {
+                                call.respond(HttpStatusCode.OK, mapOf("authenticated" to true))
+                            } else {
+                                call.respond(HttpStatusCode.Unauthorized, mapOf("authenticated" to false))
+                            }
                         }
-                    }
-                    post("/config/reload") {
-                        try {
-                            onReloadConfig?.invoke()
-                            call.respond(HttpStatusCode.OK, mapOf("message" to "Config reloaded"))
-                        } catch (e: Exception) {
-                            Logger.error("Error reloading config", e)
-                            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to reload config"))
+                        post("/config/reload") {
+                            try {
+                                onReloadConfig?.invoke()
+                                call.respond(HttpStatusCode.OK, mapOf("message" to "Config reloaded"))
+                            } catch (e: Exception) {
+                                Logger.error("Error reloading config", e)
+                                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to reload config"))
+                            }
                         }
+                        systemRoutes(getServerStats)
+                        pluginRoutes(pluginService)
+                        marketplaceRoutes(marketplaceService)
+                        fileService?.let { fileRoutes(it) }
+                        consoleService?.let { consoleRoutes(it, ::resolveClientIp) }
+                        dashboardRoutes(serverService, consoleService)
+                        serverService?.let { playerRoutes(it) }
                     }
-                    systemRoutes(getServerStats)
-                    pluginRoutes(pluginService)
-                    marketplaceRoutes(marketplaceService)
-                    fileService?.let { fileRoutes(it) }
-                    consoleService?.let { consoleRoutes(it, ::resolveClientIp) }
-                    dashboardRoutes(serverService, consoleService)
-                    serverService?.let { playerRoutes(it) }
+
+                    singlePageApplication {
+                        useResources = true
+                        filesPath = "web"
+                        defaultPage = "index.html"
+                    }
                 }
             }.apply { start(wait = false) }
     }

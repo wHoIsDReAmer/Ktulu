@@ -36,6 +36,27 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
 }
 
+val buildWeb by tasks.registering(Exec::class) {
+    description = "Build web frontend with pnpm"
+    workingDir = file("${rootProject.projectDir}/web")
+    commandLine("pnpm", "build")
+    inputs.dir("${rootProject.projectDir}/web/src")
+    inputs.file("${rootProject.projectDir}/web/package.json")
+    inputs.file("${rootProject.projectDir}/web/index.html")
+    outputs.dir("${rootProject.projectDir}/web/dist")
+}
+
+val copyWebDist by tasks.registering(Copy::class) {
+    description = "Copy web dist into plugin resources"
+    dependsOn(buildWeb)
+    from("${rootProject.projectDir}/web/dist")
+    into(layout.buildDirectory.dir("resources/main/web"))
+}
+
+tasks.processResources {
+    dependsOn(copyWebDist)
+}
+
 tasks.shadowJar {
     archiveClassifier.set("")
     archiveBaseName.set("Ktulu")
