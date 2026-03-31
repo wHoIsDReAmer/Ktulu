@@ -29,8 +29,10 @@ class KtorServer(
     private val marketplaceService: MarketplaceService,
     private val fileService: FileService? = null,
     private val consoleService: ConsoleService? = null,
-    private val apiKey: String? = null,
-    private val reverseProxy: Boolean = false,
+    private val getServerStats: (() -> com.chanwook.app.server.system.ServerStats)? = null,
+    private var apiKey: String? = null,
+    private var reverseProxy: Boolean = false,
+    private val onReloadConfig: (() -> Unit)? = null,
 ) {
     private var server: ApplicationEngine? = null
     private val requestCounts = ConcurrentHashMap<String, MutableList<Long>>()
@@ -38,6 +40,14 @@ class KtorServer(
     companion object {
         private const val RATE_LIMIT = 60
         private const val RATE_WINDOW_MS = 60_000L
+    }
+
+    fun updateConfig(
+        newApiKey: String?,
+        newReverseProxy: Boolean,
+    ) {
+        apiKey = newApiKey
+        reverseProxy = newReverseProxy
     }
 
     fun resolveClientIp(call: io.ktor.server.application.ApplicationCall): String {
@@ -120,7 +130,16 @@ class KtorServer(
                             call.respond(HttpStatusCode.Unauthorized, mapOf("authenticated" to false))
                         }
                     }
-                    systemRoutes()
+                    post("/config/reload") {
+                        try {
+                            onReloadConfig?.invoke()
+                            call.respond(HttpStatusCode.OK, mapOf("message" to "Config reloaded"))
+                        } catch (e: Exception) {
+                            Logger.error("Error reloading config", e)
+                            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to reload config"))
+                        }
+                    }
+                    systemRoutes(getServerStats)
                     pluginRoutes(pluginService)
                     marketplaceRoutes(marketplaceService)
                     fileService?.let { fileRoutes(it) }

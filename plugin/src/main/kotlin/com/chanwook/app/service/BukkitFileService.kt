@@ -70,6 +70,11 @@ class BukkitFileService(private val serverDir: File) : FileService {
         return if (file.isFile) file else null
     }
 
+    override fun getDownloadPath(path: String): File? {
+        val file = resolve(path) ?: return null
+        return if (file.exists()) file else null
+    }
+
     override fun saveUpload(
         path: String,
         fileName: String,

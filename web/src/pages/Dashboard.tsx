@@ -1,18 +1,25 @@
-import { Pause, Play, RefreshCw } from "lucide-solid";
+import { Loader2, Settings } from "lucide-solid";
 import {
   type Component,
   createResource,
   createSignal,
   onCleanup,
+  onMount,
 } from "solid-js";
 import Card from "../components/Card";
 import ProgressBar from "../components/ProgressBar";
-import { fetchJson } from "../lib/api";
+import { addToast } from "../components/Toast";
+import { fetchJson, postJson } from "../lib/api";
 
 interface SystemInfo {
   cpuUsage: number;
   memoryUsage: number;
   totalMemory: number;
+  tps: number;
+  onlinePlayers: number;
+  maxPlayers: number;
+  serverVersion: string;
+  uptime: number;
 }
 
 const StatCard: Component<{
@@ -32,31 +39,50 @@ const StatCard: Component<{
   </div>
 );
 
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 const Dashboard: Component = () => {
   const [systemInfo, { refetch }] = createResource(() =>
     fetchJson<SystemInfo>("/system-info"),
   );
 
-  const [autoRefresh, setAutoRefresh] = createSignal(false);
-  let intervalId: number | undefined;
+  onMount(() => {
+    const id = window.setInterval(refetch, 3000);
+    onCleanup(() => clearInterval(id));
+  });
 
-  const toggleAutoRefresh = () => {
-    if (autoRefresh()) {
-      clearInterval(intervalId);
-      intervalId = undefined;
-      setAutoRefresh(false);
-    } else {
-      intervalId = window.setInterval(refetch, 3000);
-      setAutoRefresh(true);
+  const [reloading, setReloading] = createSignal(false);
+  const reloadConfig = async () => {
+    setReloading(true);
+    try {
+      await postJson("/config/reload");
+      addToast("Config reloaded", true);
+    } catch {
+      addToast("Failed to reload config", false);
+    } finally {
+      setReloading(false);
     }
   };
-
-  onCleanup(() => clearInterval(intervalId));
 
   const memPercent = () => {
     const info = systemInfo();
     if (!info) return "--";
     return `${Math.round((info.memoryUsage / info.totalMemory) * 100)}%`;
+  };
+
+  const tpsColor = () => {
+    const tps = systemInfo()?.tps;
+    if (tps == null) return "text-accent-500";
+    if (tps >= 18) return "text-green-500";
+    if (tps >= 15) return "text-yellow-500";
+    return "text-red-500";
   };
 
   return (
@@ -66,44 +92,52 @@ const Dashboard: Component = () => {
           <h1 class="text-2xl font-bold">Dashboard</h1>
           <p class="mt-1 text-sm text-surface-500">Server resource overview</p>
         </div>
-        <div class="flex gap-2">
-          <button
-            type="button"
-            class={`rounded-xl px-4 py-2 text-sm font-medium transition-all active:scale-95 ${
-              autoRefresh()
-                ? "bg-green-500 text-white shadow-sm"
-                : "border border-surface-300 bg-white text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-            }`}
-            onClick={toggleAutoRefresh}
-          >
-            <span class="flex items-center gap-1.5">
-              {autoRefresh() ? <Pause size={14} /> : <Play size={14} />}
-              {autoRefresh() ? "Auto: ON" : "Auto: OFF"}
-            </span>
-          </button>
-          <button
-            type="button"
-            class="rounded-xl bg-accent-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-600 active:scale-95"
-            onClick={refetch}
-          >
-            <span class="flex items-center gap-1.5">
-              <RefreshCw size={14} />
-              Refresh
-            </span>
-          </button>
-        </div>
+        <button
+          type="button"
+          class="flex items-center gap-1.5 rounded-xl border border-surface-300 bg-white px-4 py-2 text-sm font-medium text-surface-600 transition-all hover:bg-surface-100 active:scale-95 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+          onClick={reloadConfig}
+          disabled={reloading()}
+        >
+          {reloading() ? (
+            <Loader2 size={14} class="animate-spin" />
+          ) : (
+            <Settings size={14} />
+          )}
+          Reload Config
+        </button>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard
+          label="TPS"
+          value={
+            systemInfo()?.tps != null
+              ? `${Math.round(systemInfo()?.tps ?? 0)}`
+              : "--"
+          }
+          color={tpsColor()}
+        />
+        <StatCard
+          label="Players"
+          value={
+            systemInfo()
+              ? `${systemInfo()?.onlinePlayers} / ${systemInfo()?.maxPlayers}`
+              : "--"
+          }
+        />
         <StatCard
           label="CPU Usage"
           value={`${systemInfo()?.cpuUsage ?? "--"}%`}
         />
         <StatCard label="Memory" value={memPercent()} />
         <StatCard
-          label="Status"
-          value={systemInfo.error ? "Offline" : "Online"}
-          color={systemInfo.error ? "text-red-500" : "text-green-500"}
+          label="Uptime"
+          value={
+            systemInfo()?.uptime != null
+              ? formatUptime(systemInfo()?.uptime)
+              : "--"
+          }
+          sub={systemInfo()?.serverVersion || undefined}
         />
       </div>
 
@@ -134,6 +168,18 @@ const Dashboard: Component = () => {
               max={systemInfo()?.totalMemory ?? 0}
               unit="MB"
               color="bg-blue-500"
+            />
+            <ProgressBar
+              label="TPS"
+              value={systemInfo()?.tps ?? 0}
+              max={20}
+              color={
+                (systemInfo()?.tps ?? 20) >= 18
+                  ? "bg-green-500"
+                  : (systemInfo()?.tps ?? 20) >= 15
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
+              }
             />
           </div>
         )}

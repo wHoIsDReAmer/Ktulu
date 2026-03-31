@@ -2,6 +2,7 @@ package com.chanwook.app
 
 import com.chanwook.app.common.Logger
 import com.chanwook.app.server.KtorServer
+import com.chanwook.app.server.system.ServerStats
 import com.chanwook.app.service.BukkitConsoleService
 import com.chanwook.app.service.BukkitFileService
 import com.chanwook.app.service.BukkitPluginService
@@ -32,9 +33,23 @@ class Ktulu : JavaPlugin() {
                 DefaultMarketplaceService(),
                 fileService,
                 consoleService,
+                {
+                    ServerStats(
+                        tps = Bukkit.getTPS()[0],
+                        onlinePlayers = Bukkit.getOnlinePlayers().size,
+                        maxPlayers = Bukkit.getMaxPlayers(),
+                        serverVersion = Bukkit.getVersion(),
+                    )
+                },
                 apiKey,
                 reverseProxy,
-            )
+            ) {
+                reloadConfig()
+                val newApiKey = config.getString("api-key")?.takeIf { it.isNotBlank() }
+                val newReverseProxy = config.getBoolean("reverse-proxy", false)
+                ktorServer?.updateConfig(newApiKey, newReverseProxy)
+                Logger.info("Config reloaded")
+            }
         ktorServer?.startServer()
     }
 

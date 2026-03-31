@@ -8,20 +8,38 @@ import io.ktor.server.routing.*
 import java.lang.management.ManagementFactory
 import kotlin.math.roundToInt
 
-private fun getSystemInfo(): SystemInfo {
-    val osBean = ManagementFactory.getOperatingSystemMXBean() as com.sun.management.OperatingSystemMXBean
-    val totalMemory = osBean.totalMemorySize / (1024 * 1024)
-    val freeMemory = osBean.freeMemorySize / (1024 * 1024)
-    val cpuUsage = (osBean.cpuLoad * 100).roundToInt().toDouble()
-    val usedMemory = totalMemory - freeMemory
+data class ServerStats(
+    val tps: Double,
+    val onlinePlayers: Int,
+    val maxPlayers: Int,
+    val serverVersion: String,
+)
 
-    return SystemInfo(cpuUsage, usedMemory, totalMemory)
-}
-
-fun Route.systemRoutes() {
+fun Route.systemRoutes(getServerStats: (() -> ServerStats)? = null) {
     get("/system-info") {
         try {
-            val systemInfo = getSystemInfo()
+            val osBean =
+                ManagementFactory.getOperatingSystemMXBean()
+                    as com.sun.management.OperatingSystemMXBean
+            val totalMemory = osBean.totalMemorySize / (1024 * 1024)
+            val freeMemory = osBean.freeMemorySize / (1024 * 1024)
+            val cpuUsage = (osBean.cpuLoad * 100).roundToInt().toDouble()
+            val usedMemory = totalMemory - freeMemory
+            val uptime = ManagementFactory.getRuntimeMXBean().uptime / 1000
+
+            val stats = getServerStats?.invoke()
+
+            val systemInfo =
+                SystemInfo(
+                    cpuUsage = cpuUsage,
+                    memoryUsage = usedMemory,
+                    totalMemory = totalMemory,
+                    tps = stats?.tps ?: 20.0,
+                    onlinePlayers = stats?.onlinePlayers ?: 0,
+                    maxPlayers = stats?.maxPlayers ?: 0,
+                    serverVersion = stats?.serverVersion ?: "",
+                    uptime = uptime,
+                )
             call.respond(HttpStatusCode.OK, systemInfo)
         } catch (e: Exception) {
             Logger.error("Error fetching system info", e)

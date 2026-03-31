@@ -312,16 +312,15 @@ const Files: Component = () => {
                             </span>
                           </button>
                         </Show>
-                        <Show when={file.type === "file"}>
-                          <a
-                            href={downloadUrl(filePath(file.name))}
-                            class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
-                          >
-                            <span class="flex items-center gap-1">
-                              <Download size={12} /> Download
-                            </span>
-                          </a>
-                        </Show>
+                        <a
+                          href={downloadUrl(filePath(file.name))}
+                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
+                        >
+                          <span class="flex items-center gap-1">
+                            <Download size={12} />{" "}
+                            {file.type === "directory" ? "ZIP" : "Download"}
+                          </span>
+                        </a>
                         <button
                           type="button"
                           onClick={() => handleDelete(file.name, file.type)}

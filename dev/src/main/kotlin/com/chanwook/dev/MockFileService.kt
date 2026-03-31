@@ -35,6 +35,8 @@ class MockFileService : FileService {
 
     override fun getAbsolutePath(path: String) = service.getAbsolutePath(path)
 
+    override fun getDownloadPath(path: String) = service.getDownloadPath(path)
+
     override fun saveUpload(
         path: String,
         fileName: String,
