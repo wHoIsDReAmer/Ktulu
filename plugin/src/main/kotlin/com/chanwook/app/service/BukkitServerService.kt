@@ -104,27 +104,27 @@ class BukkitServerService : ServerService {
             player.teleport(targetPlayer.location)
         }
 
-    override fun getBannedNames(): List<String> = Bukkit.getBannedPlayers().map { it.name ?: "Unknown" }
+    override fun getBannedNames(): List<String> = sync { Bukkit.getBannedPlayers().map { it.name ?: "Unknown" } }
 
-    override fun getWhitelist(): List<String> = Bukkit.getWhitelistedPlayers().map { it.name ?: "Unknown" }
+    override fun getWhitelist(): List<String> = sync { Bukkit.getWhitelistedPlayers().map { it.name ?: "Unknown" } }
 
-    override fun setWhitelistEnabled(enabled: Boolean) {
-        Bukkit.setWhitelist(enabled)
-    }
+    override fun setWhitelistEnabled(enabled: Boolean) = sync { Bukkit.setWhitelist(enabled) }
 
-    override fun isWhitelistEnabled(): Boolean = Bukkit.hasWhitelist()
+    override fun isWhitelistEnabled(): Boolean = sync { Bukkit.hasWhitelist() }
 
-    override fun addToWhitelist(name: String): Boolean {
-        val player = Bukkit.getOfflinePlayer(name)
-        if (player.isWhitelisted) return false
-        player.isWhitelisted = true
-        return true
-    }
+    override fun addToWhitelist(name: String): Boolean =
+        sync {
+            val player = Bukkit.getOfflinePlayer(name)
+            if (player.isWhitelisted) return@sync false
+            player.isWhitelisted = true
+            true
+        }
 
-    override fun removeFromWhitelist(name: String): Boolean {
-        val player = Bukkit.getOfflinePlayer(name)
-        if (!player.isWhitelisted) return false
-        player.isWhitelisted = false
-        return true
-    }
+    override fun removeFromWhitelist(name: String): Boolean =
+        sync {
+            val player = Bukkit.getOfflinePlayer(name)
+            if (!player.isWhitelisted) return@sync false
+            player.isWhitelisted = false
+            true
+        }
 }

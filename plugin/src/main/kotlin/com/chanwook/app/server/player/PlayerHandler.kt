@@ -30,6 +30,12 @@ data class TeleportRequest(
 @Serializable
 data class WhitelistActionRequest(val name: String)
 
+@Serializable
+data class WhitelistResponse(
+    val enabled: Boolean,
+    val players: List<String>,
+)
+
 fun Route.playerRoutes(serverService: ServerService) {
     post("/players/kick") {
         try {
@@ -145,9 +151,9 @@ fun Route.playerRoutes(serverService: ServerService) {
         try {
             call.respond(
                 HttpStatusCode.OK,
-                mapOf(
-                    "enabled" to serverService.isWhitelistEnabled(),
-                    "players" to serverService.getWhitelist(),
+                WhitelistResponse(
+                    enabled = serverService.isWhitelistEnabled(),
+                    players = serverService.getWhitelist(),
                 ),
             )
         } catch (e: Exception) {
@@ -160,7 +166,13 @@ fun Route.playerRoutes(serverService: ServerService) {
         try {
             val enabled = !serverService.isWhitelistEnabled()
             serverService.setWhitelistEnabled(enabled)
-            call.respond(HttpStatusCode.OK, mapOf("enabled" to enabled))
+            call.respond(
+                HttpStatusCode.OK,
+                WhitelistResponse(
+                    enabled = enabled,
+                    players = serverService.getWhitelist(),
+                ),
+            )
         } catch (e: Exception) {
             Logger.error("Error toggling whitelist", e)
             call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Error toggling whitelist"))
