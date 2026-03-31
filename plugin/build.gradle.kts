@@ -17,6 +17,10 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
 
     testImplementation("org.junit.jupiter:junit-jupiter:${libs.versions.junit.jupiter.get()}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -39,4 +43,9 @@ tasks.shadowJar {
     }
 
     mergeServiceFiles()
+
+    // Paper PluginRemapper fails on duplicate META-INF entries from Netty
+    exclude("META-INF/LICENSE.txt")
+    exclude("META-INF/NOTICE.txt")
+    exclude("META-INF/io.netty.versions.properties")
 }

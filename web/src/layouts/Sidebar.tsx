@@ -4,6 +4,7 @@ import {
   FileText,
   Moon,
   Plug,
+  Store,
   Sun,
   Terminal,
   Users,
@@ -21,6 +22,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: "/", label: "Dashboard", icon: () => <BarChart3 size={18} /> },
   { path: "/plugins", label: "Plugins", icon: () => <Plug size={18} /> },
+  {
+    path: "/marketplace",
+    label: "Marketplace",
+    icon: () => <Store size={18} />,
+  },
   { path: "/files", label: "Files", icon: () => <FileText size={18} /> },
   { path: "/users", label: "Users", icon: () => <Users size={18} /> },
   { path: "/console", label: "Console", icon: () => <Terminal size={18} /> },

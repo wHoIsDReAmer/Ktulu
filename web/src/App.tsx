@@ -7,6 +7,7 @@ const Plugins = lazy(() => import("./pages/Plugins"));
 const Files = lazy(() => import("./pages/Files"));
 const Users = lazy(() => import("./pages/Users"));
 const Console = lazy(() => import("./pages/Console"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
       <Route path="/files" component={Files} />
       <Route path="/users" component={Users} />
       <Route path="/console" component={Console} />
+      <Route path="/marketplace" component={Marketplace} />
     </Router>
   );
 }
