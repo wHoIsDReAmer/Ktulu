@@ -21,6 +21,7 @@ class Ktulu : JavaPlugin() {
 
         saveDefaultConfig()
         val apiKey = config.getString("api-key")?.takeIf { it.isNotBlank() }
+        val reverseProxy = config.getBoolean("reverse-proxy", false)
 
         consoleService = BukkitConsoleService().also { it.start() }
         val serverRoot = dataFolder.canonicalFile.parentFile.parentFile
@@ -32,6 +33,7 @@ class Ktulu : JavaPlugin() {
                 fileService,
                 consoleService,
                 apiKey,
+                reverseProxy,
             )
         ktorServer?.startServer()
     }

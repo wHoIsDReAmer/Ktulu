@@ -30,6 +30,7 @@ class KtorServer(
     private val fileService: FileService? = null,
     private val consoleService: ConsoleService? = null,
     private val apiKey: String? = null,
+    private val reverseProxy: Boolean = false,
 ) {
     private var server: ApplicationEngine? = null
     private val requestCounts = ConcurrentHashMap<String, MutableList<Long>>()
@@ -37,6 +38,14 @@ class KtorServer(
     companion object {
         private const val RATE_LIMIT = 60
         private const val RATE_WINDOW_MS = 60_000L
+    }
+
+    fun resolveClientIp(call: io.ktor.server.application.ApplicationCall): String {
+        if (reverseProxy) {
+            call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()?.let { return it }
+            call.request.headers["X-Real-IP"]?.let { return it }
+        }
+        return call.request.local.remoteAddress
     }
 
     fun startServer() {
@@ -68,7 +77,7 @@ class KtorServer(
                 }
 
                 intercept(ApplicationCallPipeline.Plugins) {
-                    val ip = call.request.local.remoteAddress
+                    val ip = resolveClientIp(call)
                     val now = System.currentTimeMillis()
                     val timestamps = requestCounts.computeIfAbsent(ip) { mutableListOf() }
                     val limited =
@@ -115,13 +124,18 @@ class KtorServer(
                     pluginRoutes(pluginService)
                     marketplaceRoutes(marketplaceService)
                     fileService?.let { fileRoutes(it) }
-                    consoleService?.let { consoleRoutes(it) }
+                    consoleService?.let { consoleRoutes(it, ::resolveClientIp) }
                 }
             }.apply { start(wait = false) }
     }
 
     fun stopServer() {
+        // Close active WebSocket sessions first
+        kotlinx.coroutines.runBlocking {
+            com.chanwook.app.server.console.closeAllSessions()
+        }
         server?.stop(2000, 5000)
         server = null
+        requestCounts.clear()
     }
 }

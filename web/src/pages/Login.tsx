@@ -1,11 +1,11 @@
 import { KeyRound, Loader2 } from "lucide-solid";
 import { type Component, createSignal } from "solid-js";
+import { addToast, ToastContainer } from "../components/Toast";
 import { verifyApiKey } from "../lib/api";
 import { setApiKey } from "../lib/auth";
 
 const Login: Component<{ onLogin: () => void }> = (props) => {
   const [key, setKey] = createSignal("");
-  const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
 
   const handleSubmit = async (e: Event) => {
@@ -14,17 +14,17 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
     if (!k) return;
 
     setLoading(true);
-    setError("");
     try {
       const ok = await verifyApiKey(k);
       if (ok) {
         setApiKey(k);
+        addToast("Authenticated", true);
         props.onLogin();
       } else {
-        setError("Invalid API key");
+        addToast("Invalid API key", false);
       }
     } catch {
-      setError("Failed to connect to server");
+      addToast("Failed to connect to server", false);
     } finally {
       setLoading(false);
     }
@@ -53,8 +53,6 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
             autofocus
           />
 
-          {error() && <p class="text-center text-sm text-red-500">{error()}</p>}
-
           <button
             type="submit"
             disabled={loading() || !key().trim()}
@@ -64,6 +62,7 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
           </button>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 };
