@@ -6,6 +6,7 @@ import com.chanwook.app.server.system.ServerStats
 import com.chanwook.app.service.BukkitConsoleService
 import com.chanwook.app.service.BukkitFileService
 import com.chanwook.app.service.BukkitPluginService
+import com.chanwook.app.service.BukkitServerService
 import com.chanwook.app.service.DefaultMarketplaceService
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
@@ -33,6 +34,7 @@ class Ktulu : JavaPlugin() {
                 DefaultMarketplaceService(),
                 fileService,
                 consoleService,
+                BukkitServerService(),
                 {
                     ServerStats(
                         tps = Bukkit.getTPS()[0],

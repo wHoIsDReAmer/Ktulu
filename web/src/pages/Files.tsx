@@ -19,7 +19,7 @@ import {
 } from "solid-js";
 import {
   deleteJson,
-  downloadUrl,
+  downloadFile,
   fetchJson,
   putJsonBody,
   uploadFile,
@@ -312,15 +312,22 @@ const Files: Component = () => {
                             </span>
                           </button>
                         </Show>
-                        <a
-                          href={downloadUrl(filePath(file.name))}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await downloadFile(filePath(file.name));
+                            } catch (e) {
+                              console.error("Download failed", e);
+                            }
+                          }}
                           class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
                         >
                           <span class="flex items-center gap-1">
                             <Download size={12} />{" "}
                             {file.type === "directory" ? "ZIP" : "Download"}
                           </span>
-                        </a>
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(file.name, file.type)}

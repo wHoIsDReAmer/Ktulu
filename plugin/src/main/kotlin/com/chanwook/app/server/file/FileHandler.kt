@@ -87,8 +87,9 @@ fun Route.fileRoutes(fileService: FileService) {
                         zipName,
                     ).toString(),
                 )
-                call.response.header(HttpHeaders.ContentType, "application/zip")
-                call.respondOutputStream {
+                call.respondOutputStream(
+                    contentType = io.ktor.http.ContentType.Application.Zip,
+                ) {
                     ZipOutputStream(this).use { zos ->
                         addDirToZip(zos, file, file.name)
                     }

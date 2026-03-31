@@ -12,4 +12,6 @@ data class SystemInfo(
     val maxPlayers: Int = 0,
     val serverVersion: String = "",
     val uptime: Long = 0,
+    val diskUsed: Long = 0,
+    val diskTotal: Long = 0,
 )

@@ -2,14 +2,17 @@ package com.chanwook.app.server
 
 import com.chanwook.app.common.Logger
 import com.chanwook.app.server.console.consoleRoutes
+import com.chanwook.app.server.dashboard.dashboardRoutes
 import com.chanwook.app.server.file.fileRoutes
 import com.chanwook.app.server.marketplace.marketplaceRoutes
+import com.chanwook.app.server.player.playerRoutes
 import com.chanwook.app.server.plugin.pluginRoutes
 import com.chanwook.app.server.system.systemRoutes
 import com.chanwook.app.service.ConsoleService
 import com.chanwook.app.service.FileService
 import com.chanwook.app.service.MarketplaceService
 import com.chanwook.app.service.PluginService
+import com.chanwook.app.service.ServerService
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -29,6 +32,7 @@ class KtorServer(
     private val marketplaceService: MarketplaceService,
     private val fileService: FileService? = null,
     private val consoleService: ConsoleService? = null,
+    private val serverService: ServerService? = null,
     private val getServerStats: (() -> com.chanwook.app.server.system.ServerStats)? = null,
     private var apiKey: String? = null,
     private var reverseProxy: Boolean = false,
@@ -87,6 +91,7 @@ class KtorServer(
                 }
 
                 intercept(ApplicationCallPipeline.Plugins) {
+                    if (call.request.local.uri != "/auth/verify") return@intercept
                     val ip = resolveClientIp(call)
                     val now = System.currentTimeMillis()
                     val timestamps = requestCounts.computeIfAbsent(ip) { mutableListOf() }
@@ -144,6 +149,8 @@ class KtorServer(
                     marketplaceRoutes(marketplaceService)
                     fileService?.let { fileRoutes(it) }
                     consoleService?.let { consoleRoutes(it, ::resolveClientIp) }
+                    dashboardRoutes(serverService, consoleService)
+                    serverService?.let { playerRoutes(it) }
                 }
             }.apply { start(wait = false) }
     }

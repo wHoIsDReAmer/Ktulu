@@ -9,7 +9,7 @@ fun main() {
 
     val consoleService = MockConsoleService().also { it.start() }
     val fileService = MockFileService()
-    val server = KtorServer(MockPluginService(), DefaultMarketplaceService(), fileService, consoleService, null)
+    val server = KtorServer(MockPluginService(), DefaultMarketplaceService(), fileService, consoleService, null, null)
     Logger.info("개발 서버를 시작합니다. (http://localhost:8332)")
     server.startServer()
 

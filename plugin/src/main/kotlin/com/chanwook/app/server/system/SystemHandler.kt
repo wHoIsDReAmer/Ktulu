@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.io.File
 import java.lang.management.ManagementFactory
 import kotlin.math.roundToInt
 
@@ -29,6 +30,10 @@ fun Route.systemRoutes(getServerStats: (() -> ServerStats)? = null) {
 
             val stats = getServerStats?.invoke()
 
+            val root = File(".").canonicalFile
+            val diskTotal = root.totalSpace / (1024 * 1024)
+            val diskUsed = (root.totalSpace - root.usableSpace) / (1024 * 1024)
+
             val systemInfo =
                 SystemInfo(
                     cpuUsage = cpuUsage,
@@ -39,6 +44,8 @@ fun Route.systemRoutes(getServerStats: (() -> ServerStats)? = null) {
                     maxPlayers = stats?.maxPlayers ?: 0,
                     serverVersion = stats?.serverVersion ?: "",
                     uptime = uptime,
+                    diskUsed = diskUsed,
+                    diskTotal = diskTotal,
                 )
             call.respond(HttpStatusCode.OK, systemInfo)
         } catch (e: Exception) {

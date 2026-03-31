@@ -1,4 +1,4 @@
-import { authHeaders, getApiKey } from "./auth";
+import { authHeaders } from "./auth";
 
 const BASE = "/api";
 
@@ -65,10 +65,25 @@ export async function uploadFile(path: string, file: File): Promise<void> {
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 }
 
-export function downloadUrl(path: string): string {
-  const key = getApiKey();
-  const tokenParam = key ? `&token=${encodeURIComponent(key)}` : "";
-  return `${BASE}/files/download?path=${encodeURIComponent(path)}${tokenParam}`;
+export async function downloadFile(path: string): Promise<void> {
+  const res = await fetch(
+    `${BASE}/files/download?path=${encodeURIComponent(path)}`,
+    { headers: authHeaders() },
+  );
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const blob = await res.blob();
+  const disposition = res.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="?([^"]+)"?/);
+  const fileName = match?.[1] ?? path.split("/").pop() ?? "download";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export class AuthError extends Error {

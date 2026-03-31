@@ -1,15 +1,17 @@
-import { Loader2, Settings } from "lucide-solid";
+import { Loader2, Settings, Terminal } from "lucide-solid";
 import {
   type Component,
   createResource,
   createSignal,
+  For,
   onCleanup,
   onMount,
+  Show,
 } from "solid-js";
 import Card from "../components/Card";
 import ProgressBar from "../components/ProgressBar";
 import { addToast } from "../components/Toast";
-import { fetchJson, postJson } from "../lib/api";
+import { fetchJson, postJson, postJsonBody } from "../lib/api";
 
 interface SystemInfo {
   cpuUsage: number;
@@ -20,6 +22,25 @@ interface SystemInfo {
   maxPlayers: number;
   serverVersion: string;
   uptime: number;
+  diskUsed: number;
+  diskTotal: number;
+}
+
+interface PlayerInfo {
+  name: string;
+  uuid: string;
+  ping: number;
+  world: string;
+  health: number;
+  level: number;
+}
+
+interface WorldInfo {
+  name: string;
+  environment: string;
+  players: number;
+  entities: number;
+  loadedChunks: number;
 }
 
 const StatCard: Component<{
@@ -48,13 +69,40 @@ function formatUptime(seconds: number): string {
   return `${m}m`;
 }
 
+const envLabel: Record<string, string> = {
+  NORMAL: "Overworld",
+  NETHER: "Nether",
+  THE_END: "The End",
+};
+
+const quickCommands = [
+  { label: "Clear Weather", command: "weather clear" },
+  { label: "Set Day", command: "time set day" },
+  { label: "Set Night", command: "time set night" },
+  { label: "Save All", command: "save-all" },
+];
+
 const Dashboard: Component = () => {
-  const [systemInfo, { refetch }] = createResource(() =>
+  const [systemInfo, { refetch: refetchSystem }] = createResource(() =>
     fetchJson<SystemInfo>("/system-info"),
+  );
+  const [players, { refetch: refetchPlayers }] = createResource(() =>
+    fetchJson<PlayerInfo[]>("/players"),
+  );
+  const [worlds, { refetch: refetchWorlds }] = createResource(() =>
+    fetchJson<WorldInfo[]>("/worlds"),
+  );
+  const [recentLogs, { refetch: refetchLogs }] = createResource(() =>
+    fetchJson<string[]>("/console/recent?lines=20"),
   );
 
   onMount(() => {
-    const id = window.setInterval(refetch, 3000);
+    const id = window.setInterval(() => {
+      refetchSystem();
+      refetchPlayers();
+      refetchWorlds();
+      refetchLogs();
+    }, 3000);
     onCleanup(() => clearInterval(id));
   });
 
@@ -68,6 +116,19 @@ const Dashboard: Component = () => {
       addToast("Failed to reload config", false);
     } finally {
       setReloading(false);
+    }
+  };
+
+  const [runningCmd, setRunningCmd] = createSignal<string | null>(null);
+  const runCommand = async (command: string) => {
+    setRunningCmd(command);
+    try {
+      await postJsonBody("/command", { command });
+      addToast(`Executed: ${command}`, true);
+    } catch {
+      addToast(`Failed: ${command}`, false);
+    } finally {
+      setRunningCmd(null);
     }
   };
 
@@ -107,6 +168,7 @@ const Dashboard: Component = () => {
         </button>
       </div>
 
+      {/* Stat Cards */}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard
           label="TPS"
@@ -134,27 +196,32 @@ const Dashboard: Component = () => {
           label="Uptime"
           value={
             systemInfo()?.uptime != null
-              ? formatUptime(systemInfo()?.uptime)
+              ? formatUptime(systemInfo()?.uptime ?? 0)
               : "--"
           }
           sub={systemInfo()?.serverVersion || undefined}
         />
       </div>
 
+      {/* Resource Monitor */}
       <Card title="Resource Monitor">
-        {systemInfo.loading && !systemInfo() && (
-          <div class="flex justify-center py-12">
-            <div class="h-8 w-8 animate-spin rounded-full border-2 border-surface-300 border-t-accent-500 dark:border-surface-700" />
-          </div>
-        )}
-
-        {systemInfo.error && (
-          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50 dark:text-red-400">
-            Unable to connect to server
-          </div>
-        )}
-
-        {systemInfo() && (
+        <Show
+          when={systemInfo()}
+          fallback={
+            <Show
+              when={systemInfo.loading}
+              fallback={
+                <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50 dark:text-red-400">
+                  Unable to connect to server
+                </div>
+              }
+            >
+              <div class="flex justify-center py-12">
+                <div class="h-8 w-8 animate-spin rounded-full border-2 border-surface-300 border-t-accent-500 dark:border-surface-700" />
+              </div>
+            </Show>
+          }
+        >
           <div class="space-y-5">
             <ProgressBar
               label="CPU"
@@ -171,7 +238,7 @@ const Dashboard: Component = () => {
             />
             <ProgressBar
               label="TPS"
-              value={systemInfo()?.tps ?? 0}
+              value={Math.round(systemInfo()?.tps ?? 0)}
               max={20}
               color={
                 (systemInfo()?.tps ?? 20) >= 18
@@ -181,9 +248,139 @@ const Dashboard: Component = () => {
                     : "bg-red-500"
               }
             />
+            <ProgressBar
+              label="Disk"
+              value={systemInfo()?.diskUsed ?? 0}
+              max={systemInfo()?.diskTotal ?? 0}
+              unit="MB"
+              color="bg-purple-500"
+            />
           </div>
-        )}
+        </Show>
       </Card>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Online Players */}
+        <Card title={`Online Players (${players()?.length ?? 0})`}>
+          <Show
+            when={(players()?.length ?? 0) > 0}
+            fallback={
+              <p class="py-4 text-center text-sm text-surface-400">
+                No players online
+              </p>
+            }
+          >
+            <div class="divide-y divide-surface-100 dark:divide-surface-800">
+              <For each={players()}>
+                {(player) => (
+                  <div class="flex items-center justify-between py-2.5">
+                    <div class="flex items-center gap-3">
+                      <img
+                        src={`https://mc-heads.net/avatar/${player.uuid}/24`}
+                        alt={player.name}
+                        class="h-6 w-6 rounded"
+                      />
+                      <div>
+                        <span class="text-sm font-medium">{player.name}</span>
+                        <span class="ml-2 text-xs text-surface-400">
+                          Lv.{player.level}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs text-surface-500">
+                      <span>{player.world}</span>
+                      <span
+                        class={
+                          player.ping < 100
+                            ? "text-green-500"
+                            : player.ping < 200
+                              ? "text-yellow-500"
+                              : "text-red-500"
+                        }
+                      >
+                        {player.ping}ms
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
+        </Card>
+
+        {/* World Info */}
+        <Card title="Worlds">
+          <Show
+            when={(worlds()?.length ?? 0) > 0}
+            fallback={
+              <p class="py-4 text-center text-sm text-surface-400">
+                No world data
+              </p>
+            }
+          >
+            <div class="divide-y divide-surface-100 dark:divide-surface-800">
+              <For each={worlds()}>
+                {(world) => (
+                  <div class="flex items-center justify-between py-2.5">
+                    <div>
+                      <span class="text-sm font-medium">{world.name}</span>
+                      <span class="ml-2 text-xs text-surface-400">
+                        {envLabel[world.environment] ?? world.environment}
+                      </span>
+                    </div>
+                    <div class="flex gap-4 text-xs text-surface-500">
+                      <span>{world.players} players</span>
+                      <span>{world.entities} entities</span>
+                      <span>{world.loadedChunks} chunks</span>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
+        </Card>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Quick Actions */}
+        <Card title="Quick Actions">
+          <div class="grid grid-cols-2 gap-2">
+            <For each={quickCommands}>
+              {(cmd) => (
+                <button
+                  type="button"
+                  onClick={() => runCommand(cmd.command)}
+                  disabled={runningCmd() === cmd.command}
+                  class="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-medium text-surface-600 transition-all hover:bg-surface-50 active:scale-95 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                >
+                  {runningCmd() === cmd.command ? (
+                    <Loader2 size={14} class="animate-spin" />
+                  ) : (
+                    <Terminal size={14} />
+                  )}
+                  {cmd.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </Card>
+
+        {/* Recent Logs */}
+        <Card title="Recent Logs">
+          <div class="max-h-48 overflow-y-auto rounded-lg bg-surface-950 p-3 font-mono text-xs leading-relaxed text-surface-300">
+            <Show
+              when={(recentLogs()?.length ?? 0) > 0}
+              fallback={
+                <p class="text-center text-surface-500">No logs available</p>
+              }
+            >
+              <For each={recentLogs()}>
+                {(line) => <div class="whitespace-pre-wrap">{line}</div>}
+              </For>
+            </Show>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
