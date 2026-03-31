@@ -23,6 +23,7 @@ import Card from "../components/Card";
 import ConfirmModal from "../components/ConfirmModal";
 import { addToast } from "../components/Toast";
 import { fetchJson, postJsonBody } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 
 interface PlayerInfo {
   name: string;
@@ -54,6 +55,7 @@ interface ConfirmState {
 const gameModes = ["SURVIVAL", "CREATIVE", "ADVENTURE", "SPECTATOR"];
 
 const Users: Component = () => {
+  const { t } = useI18n();
   const [players, { refetch: refetchPlayers }] = createResource(() =>
     fetchJson<PlayerInfo[]>("/players"),
   );
@@ -114,43 +116,41 @@ const Users: Component = () => {
     <div class="space-y-8">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">Users</h1>
-          <p class="mt-1 text-sm text-surface-500">Manage connected players</p>
+          <h1 class="text-2xl font-bold">{t("users.title")}</h1>
+          <p class="mt-1 text-sm text-surface-500">{t("users.subtitle")}</p>
         </div>
         <span class="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-sm font-medium text-green-600 dark:border-green-900 dark:bg-green-950/50 dark:text-green-400">
           <span class="h-2 w-2 rounded-full bg-green-500" />
-          {players()?.length ?? 0} online
+          {t("users.online", { count: players()?.length ?? 0 })}
         </span>
       </div>
 
-      {/* Tab Navigation */}
       <div class="flex gap-1 rounded-xl border border-surface-200 bg-white p-1 dark:border-surface-800 dark:bg-surface-900">
         <For
           each={
             [
-              { key: "players", label: "Online Players" },
-              { key: "banned", label: "Ban List" },
-              { key: "whitelist", label: "Whitelist" },
+              { key: "players", labelKey: "users.onlinePlayers" },
+              { key: "banned", labelKey: "users.banList" },
+              { key: "whitelist", labelKey: "users.whitelist" },
             ] as const
           }
         >
-          {(t) => (
+          {(tab_item) => (
             <button
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(tab_item.key)}
               class={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                tab() === t.key
+                tab() === tab_item.key
                   ? "bg-accent-500 text-white shadow-sm"
                   : "text-surface-500 hover:text-surface-700 dark:hover:text-surface-300"
               }`}
             >
-              {t.label}
+              {t(tab_item.labelKey)}
             </button>
           )}
         </For>
       </div>
 
-      {/* Online Players Tab */}
       <Show when={tab() === "players"}>
         <div class="relative">
           <Search
@@ -159,7 +159,7 @@ const Users: Component = () => {
           />
           <input
             type="text"
-            placeholder="Search players..."
+            placeholder={t("users.searchPlaceholder")}
             class="w-full rounded-xl border border-surface-300 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition-colors placeholder:text-surface-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 dark:border-surface-700 dark:bg-surface-900 dark:placeholder:text-surface-600 dark:focus:border-accent-400"
             value={search()}
             onInput={(e) => setSearch(e.currentTarget.value)}
@@ -169,9 +169,9 @@ const Users: Component = () => {
         <Show
           when={(filtered().length ?? 0) > 0}
           fallback={
-            <Card title="Player List">
+            <Card title={t("users.playerList")}>
               <p class="py-8 text-center text-sm text-surface-400">
-                No players online
+                {t("users.noPlayersOnline")}
               </p>
             </Card>
           }
@@ -221,7 +221,6 @@ const Users: Component = () => {
                     </div>
                   </div>
                   <div class="mt-3 flex flex-wrap gap-1.5 border-t border-surface-100 pt-3 dark:border-surface-800">
-                    {/* Game Mode */}
                     <For each={gameModes.filter((m) => m !== player.gameMode)}>
                       {(mode) => (
                         <button
@@ -241,7 +240,6 @@ const Users: Component = () => {
                         </button>
                       )}
                     </For>
-                    {/* OP toggle */}
                     <button
                       type="button"
                       onClick={() =>
@@ -249,36 +247,37 @@ const Users: Component = () => {
                           player.op ? "/players/deop" : "/players/op",
                           { name: player.name },
                           player.op
-                            ? `${player.name} deopped`
-                            : `${player.name} opped`,
+                            ? t("users.deopped", { name: player.name })
+                            : t("users.opped", { name: player.name }),
                         )
                       }
                       class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-yellow-600 transition-colors hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-950/30"
                     >
                       {player.op ? (
                         <>
-                          <ShieldOff size={12} /> Deop
+                          <ShieldOff size={12} /> {t("users.deop")}
                         </>
                       ) : (
                         <>
-                          <Crown size={12} /> Op
+                          <Crown size={12} /> {t("users.op")}
                         </>
                       )}
                     </button>
-                    {/* Kick */}
                     <button
                       type="button"
                       onClick={() =>
                         showConfirm({
-                          title: `Kick ${player.name}`,
-                          message: `Are you sure you want to kick ${player.name}?`,
-                          confirmLabel: "Kick",
+                          title: t("users.kickTitle", { name: player.name }),
+                          message: t("users.kickMessage", {
+                            name: player.name,
+                          }),
+                          confirmLabel: t("users.kick"),
                           danger: true,
                           onConfirm: async () => {
                             await action(
                               "/players/kick",
                               { name: player.name },
-                              `${player.name} kicked`,
+                              t("users.kicked", { name: player.name }),
                             );
                             closeConfirm();
                           },
@@ -286,22 +285,21 @@ const Users: Component = () => {
                       }
                       class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-orange-500 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950/30"
                     >
-                      <UserMinus size={12} /> Kick
+                      <UserMinus size={12} /> {t("users.kick")}
                     </button>
-                    {/* Ban */}
                     <button
                       type="button"
                       onClick={() =>
                         showConfirm({
-                          title: `Ban ${player.name}`,
-                          message: `Are you sure you want to ban ${player.name}? They will not be able to join the server.`,
-                          confirmLabel: "Ban",
+                          title: t("users.banTitle", { name: player.name }),
+                          message: t("users.banMessage", { name: player.name }),
+                          confirmLabel: t("users.ban"),
                           danger: true,
                           onConfirm: async () => {
                             await action(
                               "/players/ban",
                               { name: player.name },
-                              `${player.name} banned`,
+                              t("users.banned", { name: player.name }),
                             );
                             closeConfirm();
                           },
@@ -309,7 +307,7 @@ const Users: Component = () => {
                       }
                       class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
-                      <Ban size={12} /> Ban
+                      <Ban size={12} /> {t("users.ban")}
                     </button>
                   </div>
                 </div>
@@ -319,13 +317,12 @@ const Users: Component = () => {
         </Show>
       </Show>
 
-      {/* Ban List Tab */}
       <Show when={tab() === "banned"}>
-        <Card title="Banned Players">
+        <Card title={t("users.bannedPlayers")}>
           <div class="mb-4 flex gap-2">
             <input
               type="text"
-              placeholder="Player name to unban..."
+              placeholder={t("users.unbanPlaceholder")}
               class="flex-1 rounded-xl border border-surface-300 bg-white px-4 py-2 text-sm outline-none transition-colors placeholder:text-surface-400 focus:border-accent-500 dark:border-surface-700 dark:bg-surface-900 dark:placeholder:text-surface-600"
               value={unbanInput()}
               onInput={(e) => setUnbanInput(e.currentTarget.value)}
@@ -335,19 +332,23 @@ const Users: Component = () => {
               onClick={() => {
                 const name = unbanInput().trim();
                 if (!name) return;
-                action("/players/unban", { name }, `${name} unbanned`);
+                action(
+                  "/players/unban",
+                  { name },
+                  t("users.unbanned", { name }),
+                );
                 setUnbanInput("");
               }}
               class="rounded-xl bg-green-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-green-600 active:scale-95"
             >
-              Unban
+              {t("users.unban")}
             </button>
           </div>
           <Show
             when={(banned()?.length ?? 0) > 0}
             fallback={
               <p class="py-4 text-center text-sm text-surface-400">
-                No banned players
+                {t("users.noBannedPlayers")}
               </p>
             }
           >
@@ -359,7 +360,11 @@ const Users: Component = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        action("/players/unban", { name }, `${name} unbanned`)
+                        action(
+                          "/players/unban",
+                          { name },
+                          t("users.unbanned", { name }),
+                        )
                       }
                       class="text-red-400 transition-colors hover:text-red-600"
                     >
@@ -373,9 +378,8 @@ const Users: Component = () => {
         </Card>
       </Show>
 
-      {/* Whitelist Tab */}
       <Show when={tab() === "whitelist"}>
-        <Card title="Whitelist">
+        <Card title={t("users.whitelist")}>
           <div class="mb-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <button
@@ -387,12 +391,14 @@ const Users: Component = () => {
                       {},
                     );
                     addToast(
-                      `Whitelist ${res.enabled ? "enabled" : "disabled"}`,
+                      res.enabled
+                        ? t("users.whitelistEnabled")
+                        : t("users.whitelistDisabled"),
                       true,
                     );
                     refetchWhitelist();
                   } catch {
-                    addToast("Failed to toggle whitelist", false);
+                    addToast(t("users.whitelistToggleFailed"), false);
                   }
                 }}
                 class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -408,7 +414,9 @@ const Users: Component = () => {
                 />
               </button>
               <span class="text-sm text-surface-500">
-                {whitelist()?.enabled ? "Enabled" : "Disabled"}
+                {whitelist()?.enabled
+                  ? t("common.enabled")
+                  : t("common.disabled")}
               </span>
             </div>
           </div>
@@ -416,7 +424,7 @@ const Users: Component = () => {
           <div class="mb-4 flex gap-2">
             <input
               type="text"
-              placeholder="Add player to whitelist..."
+              placeholder={t("users.addToWhitelist")}
               class="flex-1 rounded-xl border border-surface-300 bg-white px-4 py-2 text-sm outline-none transition-colors placeholder:text-surface-400 focus:border-accent-500 dark:border-surface-700 dark:bg-surface-900 dark:placeholder:text-surface-600"
               value={whitelistInput()}
               onInput={(e) => setWhitelistInput(e.currentTarget.value)}
@@ -429,13 +437,13 @@ const Users: Component = () => {
                 action(
                   "/whitelist/add",
                   { name },
-                  `${name} added to whitelist`,
+                  t("users.whitelistAdded", { name }),
                 );
                 setWhitelistInput("");
               }}
               class="flex items-center gap-1.5 rounded-xl bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-accent-600 active:scale-95"
             >
-              <UserPlus size={14} /> Add
+              <UserPlus size={14} /> {t("common.add")}
             </button>
           </div>
 
@@ -443,7 +451,7 @@ const Users: Component = () => {
             when={(whitelist()?.players?.length ?? 0) > 0}
             fallback={
               <p class="py-4 text-center text-sm text-surface-400">
-                Whitelist is empty
+                {t("users.whitelistEmpty")}
               </p>
             }
           >
@@ -457,15 +465,17 @@ const Users: Component = () => {
                       type="button"
                       onClick={() =>
                         showConfirm({
-                          title: "Remove from Whitelist",
-                          message: `Are you sure you want to remove ${name} from the whitelist?`,
-                          confirmLabel: "Remove",
+                          title: t("users.removeFromWhitelistTitle"),
+                          message: t("users.removeFromWhitelistMessage", {
+                            name,
+                          }),
+                          confirmLabel: t("common.remove"),
                           danger: true,
                           onConfirm: async () => {
                             await action(
                               "/whitelist/remove",
                               { name },
-                              `${name} removed from whitelist`,
+                              t("users.whitelistRemoved", { name }),
                             );
                             closeConfirm();
                           },
@@ -483,7 +493,6 @@ const Users: Component = () => {
         </Card>
       </Show>
 
-      {/* Confirm Modal */}
       <Show when={confirm()}>
         {(c) => (
           <ConfirmModal

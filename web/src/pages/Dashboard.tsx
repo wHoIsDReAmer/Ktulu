@@ -12,6 +12,7 @@ import Card from "../components/Card";
 import ProgressBar from "../components/ProgressBar";
 import { addToast } from "../components/Toast";
 import { fetchJson, postJson, postJsonBody } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 
 interface SystemInfo {
   cpuUsage: number;
@@ -75,14 +76,16 @@ const envLabel: Record<string, string> = {
   THE_END: "The End",
 };
 
-const quickCommands = [
-  { label: "Clear Weather", command: "weather clear" },
-  { label: "Set Day", command: "time set day" },
-  { label: "Set Night", command: "time set night" },
-  { label: "Save All", command: "save-all" },
-];
-
 const Dashboard: Component = () => {
+  const { t } = useI18n();
+
+  const quickCommands = [
+    { labelKey: "dashboard.clearWeather", command: "weather clear" },
+    { labelKey: "dashboard.setDay", command: "time set day" },
+    { labelKey: "dashboard.setNight", command: "time set night" },
+    { labelKey: "dashboard.saveAll", command: "save-all" },
+  ];
+
   const [systemInfo, { refetch: refetchSystem }] = createResource(() =>
     fetchJson<SystemInfo>("/system-info"),
   );
@@ -111,9 +114,9 @@ const Dashboard: Component = () => {
     setReloading(true);
     try {
       await postJson("/config/reload");
-      addToast("Config reloaded", true);
+      addToast(t("dashboard.configReloaded"), true);
     } catch {
-      addToast("Failed to reload config", false);
+      addToast(t("dashboard.configReloadFailed"), false);
     } finally {
       setReloading(false);
     }
@@ -124,9 +127,9 @@ const Dashboard: Component = () => {
     setRunningCmd(command);
     try {
       await postJsonBody("/command", { command });
-      addToast(`Executed: ${command}`, true);
+      addToast(t("dashboard.executed", { command }), true);
     } catch {
-      addToast(`Failed: ${command}`, false);
+      addToast(t("dashboard.executeFailed", { command }), false);
     } finally {
       setRunningCmd(null);
     }
@@ -150,8 +153,8 @@ const Dashboard: Component = () => {
     <div class="space-y-8">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">Dashboard</h1>
-          <p class="mt-1 text-sm text-surface-500">Server resource overview</p>
+          <h1 class="text-2xl font-bold">{t("dashboard.title")}</h1>
+          <p class="mt-1 text-sm text-surface-500">{t("dashboard.subtitle")}</p>
         </div>
         <button
           type="button"
@@ -164,14 +167,13 @@ const Dashboard: Component = () => {
           ) : (
             <Settings size={14} />
           )}
-          Reload Config
+          {t("dashboard.reloadConfig")}
         </button>
       </div>
 
-      {/* Stat Cards */}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard
-          label="TPS"
+          label={t("dashboard.tps")}
           value={
             systemInfo()?.tps != null
               ? `${Math.round(systemInfo()?.tps ?? 0)}`
@@ -180,7 +182,7 @@ const Dashboard: Component = () => {
           color={tpsColor()}
         />
         <StatCard
-          label="Players"
+          label={t("dashboard.players")}
           value={
             systemInfo()
               ? `${systemInfo()?.onlinePlayers} / ${systemInfo()?.maxPlayers}`
@@ -188,12 +190,12 @@ const Dashboard: Component = () => {
           }
         />
         <StatCard
-          label="CPU Usage"
+          label={t("dashboard.cpuUsage")}
           value={`${systemInfo()?.cpuUsage ?? "--"}%`}
         />
-        <StatCard label="Memory" value={memPercent()} />
+        <StatCard label={t("dashboard.memory")} value={memPercent()} />
         <StatCard
-          label="Uptime"
+          label={t("dashboard.uptime")}
           value={
             systemInfo()?.uptime != null
               ? formatUptime(systemInfo()?.uptime ?? 0)
@@ -203,8 +205,7 @@ const Dashboard: Component = () => {
         />
       </div>
 
-      {/* Resource Monitor */}
-      <Card title="Resource Monitor">
+      <Card title={t("dashboard.resourceMonitor")}>
         <Show
           when={systemInfo()}
           fallback={
@@ -212,7 +213,7 @@ const Dashboard: Component = () => {
               when={systemInfo.loading}
               fallback={
                 <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50 dark:text-red-400">
-                  Unable to connect to server
+                  {t("dashboard.unableToConnect")}
                 </div>
               }
             >
@@ -224,20 +225,20 @@ const Dashboard: Component = () => {
         >
           <div class="space-y-5">
             <ProgressBar
-              label="CPU"
+              label={t("dashboard.cpu")}
               value={systemInfo()?.cpuUsage ?? 0}
               max={100}
               unit="%"
             />
             <ProgressBar
-              label="Memory"
+              label={t("dashboard.memory")}
               value={systemInfo()?.memoryUsage ?? 0}
               max={systemInfo()?.totalMemory ?? 0}
               unit="MB"
               color="bg-blue-500"
             />
             <ProgressBar
-              label="TPS"
+              label={t("dashboard.tps")}
               value={Math.round(systemInfo()?.tps ?? 0)}
               max={20}
               color={
@@ -249,7 +250,7 @@ const Dashboard: Component = () => {
               }
             />
             <ProgressBar
-              label="Disk"
+              label={t("dashboard.disk")}
               value={systemInfo()?.diskUsed ?? 0}
               max={systemInfo()?.diskTotal ?? 0}
               unit="MB"
@@ -260,13 +261,14 @@ const Dashboard: Component = () => {
       </Card>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Online Players */}
-        <Card title={`Online Players (${players()?.length ?? 0})`}>
+        <Card
+          title={`${t("dashboard.onlinePlayers")} (${players()?.length ?? 0})`}
+        >
           <Show
             when={(players()?.length ?? 0) > 0}
             fallback={
               <p class="py-4 text-center text-sm text-surface-400">
-                No players online
+                {t("dashboard.noPlayersOnline")}
               </p>
             }
           >
@@ -308,13 +310,12 @@ const Dashboard: Component = () => {
           </Show>
         </Card>
 
-        {/* World Info */}
-        <Card title="Worlds">
+        <Card title={t("dashboard.worlds")}>
           <Show
             when={(worlds()?.length ?? 0) > 0}
             fallback={
               <p class="py-4 text-center text-sm text-surface-400">
-                No world data
+                {t("dashboard.noWorldData")}
               </p>
             }
           >
@@ -329,9 +330,15 @@ const Dashboard: Component = () => {
                       </span>
                     </div>
                     <div class="flex gap-4 text-xs text-surface-500">
-                      <span>{world.players} players</span>
-                      <span>{world.entities} entities</span>
-                      <span>{world.loadedChunks} chunks</span>
+                      <span>
+                        {world.players} {t("dashboard.players_unit")}
+                      </span>
+                      <span>
+                        {world.entities} {t("dashboard.entities")}
+                      </span>
+                      <span>
+                        {world.loadedChunks} {t("dashboard.chunks")}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -342,8 +349,7 @@ const Dashboard: Component = () => {
       </div>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Quick Actions */}
-        <Card title="Quick Actions">
+        <Card title={t("dashboard.quickActions")}>
           <div class="grid grid-cols-2 gap-2">
             <For each={quickCommands}>
               {(cmd) => (
@@ -358,20 +364,21 @@ const Dashboard: Component = () => {
                   ) : (
                     <Terminal size={14} />
                   )}
-                  {cmd.label}
+                  {t(cmd.labelKey)}
                 </button>
               )}
             </For>
           </div>
         </Card>
 
-        {/* Recent Logs */}
-        <Card title="Recent Logs">
+        <Card title={t("dashboard.recentLogs")}>
           <div class="max-h-48 overflow-y-auto rounded-lg bg-surface-950 p-3 font-mono text-xs leading-relaxed text-surface-300">
             <Show
               when={(recentLogs()?.length ?? 0) > 0}
               fallback={
-                <p class="text-center text-surface-500">No logs available</p>
+                <p class="text-center text-surface-500">
+                  {t("dashboard.noLogs")}
+                </p>
               }
             >
               <For each={recentLogs()}>

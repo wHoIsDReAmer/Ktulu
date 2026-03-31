@@ -10,6 +10,7 @@ import {
   onMount,
 } from "solid-js";
 import { getApiKey } from "../lib/auth";
+import { useI18n } from "../lib/i18n";
 
 const ANSI_16_COLORS: Record<number, string> = {
   30: "#000",
@@ -133,6 +134,7 @@ function parseColors(text: string): JSX.Element {
 }
 
 const Console: Component = () => {
+  const { t } = useI18n();
   const [logs, setLogs] = createSignal<string[]>([]);
   const [command, setCommand] = createSignal("");
   const [connected, setConnected] = createSignal(false);
@@ -236,10 +238,8 @@ const Console: Component = () => {
   return (
     <div class="flex h-[calc(100vh-4rem)] flex-col space-y-6">
       <div>
-        <h1 class="text-2xl font-bold">Console</h1>
-        <p class="mt-1 text-sm text-surface-500">
-          Real-time server logs and command execution
-        </p>
+        <h1 class="text-2xl font-bold">{t("console.title")}</h1>
+        <p class="mt-1 text-sm text-surface-500">{t("console.subtitle")}</p>
       </div>
 
       <div class="flex flex-1 flex-col overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
@@ -249,14 +249,14 @@ const Console: Component = () => {
               <>
                 <Wifi size={14} class="text-green-500" />
                 <span class="text-sm font-medium text-green-600 dark:text-green-400">
-                  Connected
+                  {t("console.connected")}
                 </span>
               </>
             ) : (
               <>
                 <WifiOff size={14} class="text-surface-400" />
                 <span class="text-sm font-medium text-surface-500">
-                  Disconnected
+                  {t("console.disconnected")}
                 </span>
               </>
             )}
@@ -268,7 +268,7 @@ const Console: Component = () => {
               class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
             >
               <span class="flex items-center gap-1">
-                <Trash size={12} /> Clear
+                <Trash size={12} /> {t("console.clear")}
               </span>
             </button>
             <button
@@ -277,7 +277,7 @@ const Console: Component = () => {
               class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
             >
               <span class="flex items-center gap-1">
-                <ArrowDown size={12} /> Bottom
+                <ArrowDown size={12} /> {t("console.bottom")}
               </span>
             </button>
           </div>
@@ -299,7 +299,7 @@ const Console: Component = () => {
       <form onSubmit={handleSubmit} class="flex gap-2">
         <input
           type="text"
-          placeholder="Enter command..."
+          placeholder={t("console.placeholder")}
           class="flex-1 rounded-xl border border-surface-300 bg-white px-4 py-2.5 font-mono text-sm outline-none transition-colors placeholder:text-surface-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 dark:border-surface-700 dark:bg-surface-900 dark:placeholder:text-surface-600 dark:focus:border-accent-400"
           value={command()}
           onInput={(e) => setCommand(e.currentTarget.value)}
@@ -311,7 +311,7 @@ const Console: Component = () => {
           class="rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span class="flex items-center gap-1.5">
-            <Send size={14} /> Send
+            <Send size={14} /> {t("console.send")}
           </span>
         </button>
       </form>

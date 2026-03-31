@@ -1,6 +1,7 @@
 import { AlertTriangle, Loader2 } from "lucide-solid";
 import { type Component, createSignal, Show } from "solid-js";
 import { Portal } from "solid-js/web";
+import { useI18n } from "../lib/i18n";
 
 interface ConfirmModalProps {
   title: string;
@@ -12,6 +13,7 @@ interface ConfirmModalProps {
 }
 
 const ConfirmModal: Component<ConfirmModalProps> = (props) => {
+  const { t } = useI18n();
   const [loading, setLoading] = createSignal(false);
 
   const handleConfirm = async () => {
@@ -47,7 +49,7 @@ const ConfirmModal: Component<ConfirmModalProps> = (props) => {
               disabled={loading()}
               class="rounded-xl border border-surface-300 px-4 py-2 text-sm font-medium text-surface-600 transition-all hover:bg-surface-100 active:scale-95 dark:border-surface-700 dark:text-surface-300 dark:hover:bg-surface-800"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -60,7 +62,7 @@ const ConfirmModal: Component<ConfirmModalProps> = (props) => {
               }`}
             >
               {loading() && <Loader2 size={14} class="animate-spin" />}
-              {props.confirmLabel ?? "Confirm"}
+              {props.confirmLabel ?? t("common.confirm")}
             </button>
           </div>
         </div>

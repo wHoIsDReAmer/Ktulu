@@ -16,6 +16,7 @@ import {
 import ConfirmModal from "../components/ConfirmModal";
 import { addToast } from "../components/Toast";
 import { deleteJson, fetchJson, postJson } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 
 interface Plugin {
   name: string;
@@ -28,6 +29,7 @@ interface Plugin {
 }
 
 const Plugins: Component = () => {
+  const { t } = useI18n();
   const [plugins, { refetch, mutate }] = createResource(() =>
     fetchJson<Plugin[]>("/plugins"),
   );
@@ -52,9 +54,9 @@ const Plugins: Component = () => {
     try {
       await postJson(`/plugins/${name}/unload`);
       refetch();
-      addToast(`${name} unloaded`, true);
+      addToast(t("plugins.unloaded", { name }), true);
     } catch {
-      addToast(`Failed to unload ${name}`, false);
+      addToast(t("plugins.unloadFailed", { name }), false);
     } finally {
       setUnloading(null);
     }
@@ -69,9 +71,9 @@ const Plugins: Component = () => {
         `/plugins/${encodeURIComponent(fileName)}/load`,
       );
       mutate((prev) => prev?.map((p) => (p.name === displayName ? result : p)));
-      addToast(`${result.name} loaded`, true);
+      addToast(t("plugins.loaded", { name: result.name }), true);
     } catch {
-      addToast(`Failed to load ${displayName}`, false);
+      addToast(t("plugins.loadFailed", { name: displayName }), false);
     } finally {
       setLoading(null);
     }
@@ -82,9 +84,9 @@ const Plugins: Component = () => {
     try {
       await deleteJson(`/plugins/${name}`);
       mutate((prev) => prev?.filter((p) => p.name !== displayName));
-      addToast(`${displayName} removed`, true);
+      addToast(t("plugins.removed", { name: displayName }), true);
     } catch {
-      addToast(`Failed to remove ${displayName}`, false);
+      addToast(t("plugins.removeFailed", { name: displayName }), false);
     } finally {
       setRemoving(null);
     }
@@ -94,11 +96,11 @@ const Plugins: Component = () => {
     <div class="space-y-8">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">Plugins</h1>
+          <h1 class="text-2xl font-bold">{t("plugins.title")}</h1>
           <p class="mt-1 text-sm text-surface-500">
             {plugins()
-              ? `${plugins()?.length} plugins installed`
-              : "Loading..."}
+              ? t("plugins.count", { count: plugins()?.length ?? 0 })
+              : t("common.loading")}
           </p>
         </div>
         <button
@@ -107,14 +109,14 @@ const Plugins: Component = () => {
           onClick={refetch}
         >
           <span class="flex items-center gap-1.5">
-            <RefreshCw size={14} /> Refresh
+            <RefreshCw size={14} /> {t("common.refresh")}
           </span>
         </button>
       </div>
 
       <input
         type="text"
-        placeholder="Search plugins..."
+        placeholder={t("plugins.searchPlaceholder")}
         class="w-full rounded-xl border border-surface-300 bg-white px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 dark:border-surface-700 dark:bg-surface-900 dark:placeholder:text-surface-600 dark:focus:border-accent-400"
         value={search()}
         onInput={(e) => setSearch(e.currentTarget.value)}
@@ -128,7 +130,7 @@ const Plugins: Component = () => {
 
       {plugins.error && (
         <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50 dark:text-red-400">
-          Failed to load plugins. Is the server running?
+          {t("plugins.failedToLoad")}
         </div>
       )}
 
@@ -156,7 +158,7 @@ const Plugins: Component = () => {
                     </span>
                     {!plugin.loaded && (
                       <span class="rounded-md bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-400">
-                        Not loaded
+                        {t("plugins.notLoaded")}
                       </span>
                     )}
                   </div>
@@ -181,7 +183,7 @@ const Plugins: Component = () => {
                       >
                         <Play size={12} />
                       </Show>
-                      Load
+                      {t("plugins.load")}
                     </button>
                   }
                 >
@@ -199,7 +201,7 @@ const Plugins: Component = () => {
                     >
                       <Square size={12} />
                     </Show>
-                    Unload
+                    {t("plugins.unload")}
                   </button>
                 </Show>
                 <button
@@ -226,7 +228,7 @@ const Plugins: Component = () => {
                     >
                       <Trash2 size={12} />
                     </Show>
-                    Remove
+                    {t("plugins.remove")}
                   </span>
                 </button>
               </div>
@@ -237,9 +239,9 @@ const Plugins: Component = () => {
 
       <Show when={unloadTarget()}>
         <ConfirmModal
-          title="Unload plugin"
-          message={`Are you sure you want to unload "${unloadTarget()}"? This may affect server functionality.`}
-          confirmLabel="Unload"
+          title={t("plugins.unloadTitle")}
+          message={t("plugins.unloadMessage", { name: unloadTarget() ?? "" })}
+          confirmLabel={t("plugins.unload")}
           danger
           onConfirm={async () => {
             const name = unloadTarget();
@@ -252,9 +254,11 @@ const Plugins: Component = () => {
 
       <Show when={removeTarget()}>
         <ConfirmModal
-          title="Remove plugin"
-          message={`Are you sure you want to remove "${removeTarget()?.name}"? The plugin file will be deleted.`}
-          confirmLabel="Remove"
+          title={t("plugins.removeTitle")}
+          message={t("plugins.removeMessage", {
+            name: removeTarget()?.name ?? "",
+          })}
+          confirmLabel={t("plugins.remove")}
           danger
           onConfirm={async () => {
             const target = removeTarget();

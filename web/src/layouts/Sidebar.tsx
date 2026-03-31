@@ -2,6 +2,7 @@ import { A } from "@solidjs/router";
 import {
   BarChart3,
   FileText,
+  Globe,
   Moon,
   Plug,
   Store,
@@ -11,29 +12,60 @@ import {
   Zap,
 } from "lucide-solid";
 import { type Component, For, type JSX } from "solid-js";
+import { type Locale, useI18n } from "../lib/i18n";
 import { useTheme } from "../lib/theme";
 
 interface NavItem {
   path: string;
-  label: string;
+  labelKey: string;
   icon: () => JSX.Element;
 }
 
 const navItems: NavItem[] = [
-  { path: "/", label: "Dashboard", icon: () => <BarChart3 size={18} /> },
-  { path: "/plugins", label: "Plugins", icon: () => <Plug size={18} /> },
+  {
+    path: "/",
+    labelKey: "sidebar.dashboard",
+    icon: () => <BarChart3 size={18} />,
+  },
+  {
+    path: "/plugins",
+    labelKey: "sidebar.plugins",
+    icon: () => <Plug size={18} />,
+  },
   {
     path: "/marketplace",
-    label: "Marketplace",
+    labelKey: "sidebar.marketplace",
     icon: () => <Store size={18} />,
   },
-  { path: "/files", label: "Files", icon: () => <FileText size={18} /> },
-  { path: "/users", label: "Users", icon: () => <Users size={18} /> },
-  { path: "/console", label: "Console", icon: () => <Terminal size={18} /> },
+  {
+    path: "/files",
+    labelKey: "sidebar.files",
+    icon: () => <FileText size={18} />,
+  },
+  {
+    path: "/users",
+    labelKey: "sidebar.users",
+    icon: () => <Users size={18} />,
+  },
+  {
+    path: "/console",
+    labelKey: "sidebar.console",
+    icon: () => <Terminal size={18} />,
+  },
 ];
+
+const localeLabels: Record<Locale, string> = {
+  en: "EN",
+  ko: "KO",
+};
 
 const Sidebar: Component = () => {
   const { theme, toggle } = useTheme();
+  const { t, locale, setLocale } = useI18n();
+
+  const cycleLocale = () => {
+    setLocale(locale() === "en" ? "ko" : "en");
+  };
 
   return (
     <aside class="flex h-screen w-60 flex-col border-r border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
@@ -54,20 +86,28 @@ const Sidebar: Component = () => {
               end={item.path === "/"}
             >
               {item.icon()}
-              {item.label}
+              {t(item.labelKey)}
             </A>
           )}
         </For>
       </nav>
 
-      <div class="border-t border-surface-200 p-3 dark:border-surface-800">
+      <div class="space-y-1 border-t border-surface-200 p-3 dark:border-surface-800">
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-surface-600 transition-all hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800"
+          onClick={cycleLocale}
+        >
+          <Globe size={18} />
+          {localeLabels[locale()]}
+        </button>
         <button
           type="button"
           class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-surface-600 transition-all hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800"
           onClick={toggle}
         >
           {theme() === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          {theme() === "dark" ? "Light Mode" : "Dark Mode"}
+          {theme() === "dark" ? t("sidebar.lightMode") : t("sidebar.darkMode")}
         </button>
       </div>
     </aside>

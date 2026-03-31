@@ -26,6 +26,7 @@ import {
   putJsonBody,
   uploadFile,
 } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 
 interface FileEntry {
   name: string;
@@ -74,6 +75,7 @@ const isTextFile = (name: string) => {
 };
 
 const Files: Component = () => {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [path, _setPath] = createSignal(searchParams.path || "/");
   const setPath = (p: string) => {
@@ -156,8 +158,9 @@ const Files: Component = () => {
           await uploadFile(path(), file);
         }
         refetch();
-      } catch (e) {
-        console.error("Upload failed", e);
+        addToast(t("files.uploadSuccess"), true);
+      } catch {
+        addToast(t("files.uploadFailed"), false);
       } finally {
         setUploading(false);
       }
@@ -174,9 +177,9 @@ const Files: Component = () => {
     try {
       await deleteJson(`/files?path=${encodeURIComponent(fullPath)}`);
       refetch();
-      addToast(`${target.name} deleted`, true);
+      addToast(t("files.deleted", { name: target.name }), true);
     } catch {
-      addToast(`Failed to delete ${target.name}`, false);
+      addToast(t("files.deleteFailed", { name: target.name }), false);
     } finally {
       setDeleting(null);
       setDeleteTarget(null);
@@ -190,10 +193,8 @@ const Files: Component = () => {
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">Files</h1>
-          <p class="mt-1 text-sm text-surface-500">
-            Browse and manage server files
-          </p>
+          <h1 class="text-2xl font-bold">{t("files.title")}</h1>
+          <p class="mt-1 text-sm text-surface-500">{t("files.subtitle")}</p>
         </div>
         <button
           type="button"
@@ -206,7 +207,7 @@ const Files: Component = () => {
           ) : (
             <Upload size={16} />
           )}
-          Upload
+          {t("files.upload")}
         </button>
       </div>
 
@@ -263,7 +264,7 @@ const Files: Component = () => {
                     colspan="4"
                     class="px-4 py-8 text-center text-surface-400"
                   >
-                    Empty directory
+                    {t("files.emptyDir")}
                   </td>
                 </tr>
               </Show>
@@ -313,7 +314,7 @@ const Files: Component = () => {
                             class="rounded-lg px-2.5 py-1 text-xs font-medium text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
                           >
                             <span class="flex items-center gap-1">
-                              <Pencil size={12} /> Edit
+                              <Pencil size={12} /> {t("files.edit")}
                             </span>
                           </button>
                         </Show>
@@ -330,7 +331,9 @@ const Files: Component = () => {
                         >
                           <span class="flex items-center gap-1">
                             <Download size={12} />{" "}
-                            {file.type === "directory" ? "ZIP" : "Download"}
+                            {file.type === "directory"
+                              ? t("files.zip")
+                              : t("files.download")}
                           </span>
                         </button>
                         <button
@@ -350,7 +353,7 @@ const Files: Component = () => {
                             ) : (
                               <Trash2 size={12} />
                             )}
-                            Delete
+                            {t("common.delete")}
                           </span>
                         </button>
                       </div>
@@ -365,9 +368,15 @@ const Files: Component = () => {
 
       <Show when={deleteTarget()}>
         <ConfirmModal
-          title={`Delete ${deleteTarget()?.type === "directory" ? "folder" : "file"}`}
-          message={`Are you sure you want to delete "${deleteTarget()?.name}"? This action cannot be undone.`}
-          confirmLabel="Delete"
+          title={
+            deleteTarget()?.type === "directory"
+              ? t("files.deleteFolder")
+              : t("files.deleteFile")
+          }
+          message={t("files.deleteMessage", {
+            name: deleteTarget()?.name ?? "",
+          })}
+          confirmLabel={t("common.delete")}
           danger
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}
@@ -389,7 +398,7 @@ const Files: Component = () => {
                   class="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-accent-600 disabled:opacity-50"
                 >
                   {saving() && <Loader2 size={12} class="animate-spin" />}
-                  Save
+                  {t("common.save")}
                 </button>
                 <button
                   type="button"

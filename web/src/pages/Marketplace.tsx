@@ -1,6 +1,7 @@
 import { Download, Loader2, Search, Store } from "lucide-solid";
 import { type Component, createSignal, For, Show } from "solid-js";
 import { fetchJson, postJsonBody } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 
 interface MarketplacePlugin {
   id: string;
@@ -16,6 +17,7 @@ interface MarketplacePlugin {
 }
 
 const Marketplace: Component = () => {
+  const { t } = useI18n();
   const [query, setQuery] = createSignal("");
   const [source, setSource] = createSignal<string>("all");
   const [results, setResults] = createSignal<MarketplacePlugin[]>([]);
@@ -38,7 +40,7 @@ const Marketplace: Component = () => {
       );
       setResults(data);
     } catch {
-      setMessage({ text: "Search failed. Is the server running?", ok: false });
+      setMessage({ text: t("marketplace.searchFailed"), ok: false });
     } finally {
       setLoading(false);
     }
@@ -53,11 +55,14 @@ const Marketplace: Component = () => {
         id: plugin.id,
       });
       setMessage({
-        text: `${plugin.name} installed. Restart server to load.`,
+        text: t("marketplace.installed", { name: plugin.name }),
         ok: true,
       });
     } catch {
-      setMessage({ text: `Failed to install ${plugin.name}`, ok: false });
+      setMessage({
+        text: t("marketplace.installFailed", { name: plugin.name }),
+        ok: false,
+      });
     } finally {
       setInstalling(null);
     }
@@ -72,10 +77,8 @@ const Marketplace: Component = () => {
   return (
     <div class="space-y-8">
       <div>
-        <h1 class="text-2xl font-bold">Marketplace</h1>
-        <p class="mt-1 text-sm text-surface-500">
-          Search and install plugins from Modrinth and Hangar
-        </p>
+        <h1 class="text-2xl font-bold">{t("marketplace.title")}</h1>
+        <p class="mt-1 text-sm text-surface-500">{t("marketplace.subtitle")}</p>
       </div>
 
       <Show when={message()}>
@@ -97,7 +100,7 @@ const Marketplace: Component = () => {
           <Search size={16} class="text-surface-400" />
           <input
             type="text"
-            placeholder="Search plugins..."
+            placeholder={t("marketplace.searchPlaceholder")}
             class="flex-1 bg-transparent text-sm outline-none placeholder:text-surface-400 dark:placeholder:text-surface-600"
             value={query()}
             onInput={(e) => setQuery(e.currentTarget.value)}
@@ -109,7 +112,7 @@ const Marketplace: Component = () => {
           value={source()}
           onChange={(e) => setSource(e.currentTarget.value)}
         >
-          <option value="all">All Sources</option>
+          <option value="all">{t("marketplace.allSources")}</option>
           <option value="modrinth">Modrinth</option>
           <option value="hangar">Hangar</option>
         </select>
@@ -118,7 +121,7 @@ const Marketplace: Component = () => {
           class="rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-600 active:scale-95"
           onClick={doSearch}
         >
-          Search
+          {t("common.search")}
         </button>
       </div>
 
@@ -172,7 +175,10 @@ const Marketplace: Component = () => {
                     </p>
                     <div class="mt-1 flex flex-wrap items-center gap-3 text-xs text-surface-400">
                       <span>{plugin.author}</span>
-                      <span>{formatDownloads(plugin.downloads)} downloads</span>
+                      <span>
+                        {formatDownloads(plugin.downloads)}{" "}
+                        {t("marketplace.downloads")}
+                      </span>
                       <Show when={plugin.gameVersions?.length > 0}>
                         <span>
                           MC {plugin.gameVersions?.slice(-3).join(", ")}
@@ -194,7 +200,7 @@ const Marketplace: Component = () => {
                   >
                     <Download size={14} />
                   </Show>
-                  Install
+                  {t("marketplace.install")}
                 </button>
               </div>
             )}
@@ -204,7 +210,7 @@ const Marketplace: Component = () => {
 
       <Show when={!loading() && results().length === 0 && query().trim()}>
         <div class="py-12 text-center text-sm text-surface-400">
-          No results found. Try a different search term.
+          {t("marketplace.noResults")}
         </div>
       </Show>
     </div>
