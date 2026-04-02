@@ -8,6 +8,7 @@ import com.chanwook.app.service.BukkitFileService
 import com.chanwook.app.service.BukkitPluginService
 import com.chanwook.app.service.BukkitServerService
 import com.chanwook.app.service.DefaultMarketplaceService
+import kotlinx.coroutines.runBlocking
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -53,6 +54,11 @@ class Ktulu : JavaPlugin() {
                 Logger.info("Config reloaded")
             }
         ktorServer?.startServer()
+
+        Bukkit.getScheduler().runTaskAsynchronously(this) { _ ->
+            @Suppress("DEPRECATION")
+            runBlocking { UpdateChecker(description.version).check() }
+        }
     }
 
     override fun onDisable() {
