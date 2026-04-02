@@ -239,7 +239,7 @@ const Files: Component = () => {
         </For>
       </div>
 
-      <div class="overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
+      <div class="overflow-x-auto rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
         <Show
           when={!files.loading}
           fallback={

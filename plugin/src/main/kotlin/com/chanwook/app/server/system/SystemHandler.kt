@@ -22,10 +22,11 @@ fun Route.systemRoutes(getServerStats: (() -> ServerStats)? = null) {
             val osBean =
                 ManagementFactory.getOperatingSystemMXBean()
                     as com.sun.management.OperatingSystemMXBean
-            val totalMemory = osBean.totalMemorySize / (1024 * 1024)
-            val freeMemory = osBean.freeMemorySize / (1024 * 1024)
             val cpuUsage = (osBean.cpuLoad * 100).roundToInt().toDouble()
-            val usedMemory = totalMemory - freeMemory
+
+            val runtime = Runtime.getRuntime()
+            val totalMemory = runtime.maxMemory() / (1024 * 1024)
+            val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
             val uptime = ManagementFactory.getRuntimeMXBean().uptime / 1000
 
             val stats = getServerStats?.invoke()

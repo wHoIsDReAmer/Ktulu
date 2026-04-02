@@ -70,6 +70,11 @@ function formatUptime(seconds: number): string {
   return `${m}m`;
 }
 
+function formatMB(mb: number): string {
+  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+  return `${Math.round(mb)} MB`;
+}
+
 const envLabel: Record<string, string> = {
   NORMAL: "Overworld",
   NETHER: "Nether",
@@ -135,10 +140,10 @@ const Dashboard: Component = () => {
     }
   };
 
-  const memPercent = () => {
+  const memDisplay = () => {
     const info = systemInfo();
     if (!info) return "--";
-    return `${Math.round((info.memoryUsage / info.totalMemory) * 100)}%`;
+    return `${formatMB(info.memoryUsage)} / ${formatMB(info.totalMemory)}`;
   };
 
   const tpsColor = () => {
@@ -171,7 +176,7 @@ const Dashboard: Component = () => {
         </button>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
           label={t("dashboard.tps")}
           value={
@@ -193,7 +198,7 @@ const Dashboard: Component = () => {
           label={t("dashboard.cpuUsage")}
           value={`${systemInfo()?.cpuUsage ?? "--"}%`}
         />
-        <StatCard label={t("dashboard.memory")} value={memPercent()} />
+        <StatCard label={t("dashboard.memory")} value={memDisplay()} />
         <StatCard
           label={t("dashboard.uptime")}
           value={
@@ -234,7 +239,7 @@ const Dashboard: Component = () => {
               label={t("dashboard.memory")}
               value={systemInfo()?.memoryUsage ?? 0}
               max={systemInfo()?.totalMemory ?? 0}
-              unit="MB"
+              formatValue={formatMB}
               color="bg-blue-500"
             />
             <ProgressBar
@@ -253,7 +258,7 @@ const Dashboard: Component = () => {
               label={t("dashboard.disk")}
               value={systemInfo()?.diskUsed ?? 0}
               max={systemInfo()?.diskTotal ?? 0}
-              unit="MB"
+              formatValue={formatMB}
               color="bg-purple-500"
             />
           </div>

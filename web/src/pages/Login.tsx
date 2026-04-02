@@ -39,7 +39,9 @@ const Login: Component<{ onLogin: () => void }> = (props) => {
           <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-500/10">
             <KeyRound size={24} class="text-accent-500" />
           </div>
-          <h1 class="text-xl font-bold">{t("login.title")}</h1>
+          <h1 class="text-xl font-bold text-surface-900 dark:text-surface-100">
+            {t("login.title")}
+          </h1>
           <p class="mt-1 text-sm text-surface-500">{t("login.subtitle")}</p>
         </div>
 

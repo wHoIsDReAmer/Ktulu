@@ -236,7 +236,7 @@ const Console: Component = () => {
   };
 
   return (
-    <div class="flex h-[calc(100vh-4rem)] flex-col space-y-6">
+    <div class="flex h-[calc(100vh-4rem)] flex-col space-y-4 lg:space-y-6">
       <div>
         <h1 class="text-2xl font-bold">{t("console.title")}</h1>
         <p class="mt-1 text-sm text-surface-500">{t("console.subtitle")}</p>

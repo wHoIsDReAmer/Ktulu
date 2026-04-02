@@ -59,7 +59,7 @@ const localeLabels: Record<Locale, string> = {
   ko: "KO",
 };
 
-const Sidebar: Component = () => {
+const Sidebar: Component<{ onNavigate?: () => void }> = (props) => {
   const { theme, toggle } = useTheme();
   const { t, locale, setLocale } = useI18n();
 
@@ -84,6 +84,7 @@ const Sidebar: Component = () => {
               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-surface-600 transition-all hover:bg-surface-100 hover:text-surface-900 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-white"
               activeClass="!bg-accent-500/10 !text-accent-600 dark:!text-accent-400"
               end={item.path === "/"}
+              onClick={() => props.onNavigate?.()}
             >
               {item.icon()}
               {t(item.labelKey)}

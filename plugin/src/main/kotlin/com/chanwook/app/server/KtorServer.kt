@@ -156,10 +156,15 @@ class KtorServer(
                         serverService?.let { playerRoutes(it) }
                     }
 
-                    singlePageApplication {
-                        useResources = true
-                        filesPath = "web"
-                        defaultPage = "index.html"
+                    staticResources("/", "web")
+
+                    get("{...}") {
+                        val resource = call.resolveResource("web/index.html")
+                        if (resource != null) {
+                            call.respond(resource)
+                        } else {
+                            call.respond(HttpStatusCode.NotFound)
+                        }
                     }
                 }
             }.apply { start(wait = false) }

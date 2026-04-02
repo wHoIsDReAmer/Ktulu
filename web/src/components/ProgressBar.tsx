@@ -4,13 +4,17 @@ interface ProgressBarProps {
   label: string;
   value: number;
   max: number;
-  unit: string;
+  unit?: string;
+  formatValue?: (v: number) => string;
   color?: string;
 }
 
 const ProgressBar: Component<ProgressBarProps> = (props) => {
-  const percentage = () => Math.round((props.value / props.max) * 100);
+  const percentage = () =>
+    props.max > 0 ? Math.round((props.value / props.max) * 100) : 0;
   const barColor = () => props.color ?? "bg-accent-500";
+  const fmt = (v: number) =>
+    props.formatValue ? props.formatValue(v) : `${v}${props.unit ?? ""}`;
 
   return (
     <div>
@@ -19,9 +23,7 @@ const ProgressBar: Component<ProgressBarProps> = (props) => {
           {props.label}
         </span>
         <span class="tabular-nums text-surface-500 dark:text-surface-500">
-          {props.value}
-          {props.unit} / {props.max}
-          {props.unit} ({percentage()}%)
+          {fmt(props.value)} / {fmt(props.max)} ({percentage()}%)
         </span>
       </div>
       <div class="h-2.5 w-full overflow-hidden rounded-full bg-surface-200 dark:bg-surface-800">
