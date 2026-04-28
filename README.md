@@ -10,6 +10,16 @@
 </p>
 </div>
 
+## Screenshots
+
+| Dashboard | Plugins | Marketplace |
+|:-:|:-:|:-:|
+| <img src="assets/dashboard.png" width="300" /> | <img src="assets/plugins.png" width="300" /> | <img src="assets/marketplace.png" width="300" /> |
+
+| Files | Users | Console |
+|:-:|:-:|:-:|
+| <img src="assets/files.png" width="300" /> | <img src="assets/users.png" width="300" /> | <img src="assets/console.png" width="300" /> |
+
 ## Features
 
 ### Dashboard
