@@ -1,9 +1,16 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import solid from "vite-plugin-solid";
 
 export default defineConfig({
-  plugins: [tailwindcss(), solid()],
+  plugins: [
+    tailwindcss(),
+    solid(),
+    ViteImageOptimizer({
+      png: { quality: 85 },
+    }),
+  ],
   server: {
     port: 3000,
     proxy: {

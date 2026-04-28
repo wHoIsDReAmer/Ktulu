@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="assets/logo.png" alt="Ktulu" width="128" />
   <h1>Ktulu</h1>
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
   <img src="https://img.shields.io/badge/Ktor-087CFA?style=for-the-badge&logo=ktor&logoColor=white" alt="Ktor">

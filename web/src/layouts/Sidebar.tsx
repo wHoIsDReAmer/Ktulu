@@ -9,7 +9,6 @@ import {
   Sun,
   Terminal,
   Users,
-  Zap,
 } from "lucide-solid";
 import { type Component, For, type JSX } from "solid-js";
 import { type Locale, useI18n } from "../lib/i18n";
@@ -70,7 +69,7 @@ const Sidebar: Component<{ onNavigate?: () => void }> = (props) => {
   return (
     <aside class="flex h-screen w-60 flex-col border-r border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
       <div class="flex items-center gap-2.5 px-5 py-6">
-        <Zap size={22} class="text-accent-500" />
+        <img src="/logo.png" alt="Ktulu" class="h-8 w-8" />
         <h1 class="text-xl font-bold tracking-tight text-accent-600 dark:text-accent-400">
           Ktulu
         </h1>
